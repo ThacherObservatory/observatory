@@ -9,6 +9,7 @@
 # - Develop simple plotting routines for data including time series
 #   FWHM, histograms, and peak to peak intensity fluctuations.
 # - Develop routine to read multiple days of data
+# - Develop method to take all data and plot it, presentation worthy formatting
 # 
 # History:
 # --------
@@ -17,17 +18,26 @@
 #
 # jswift  4/1/2015: Vetted all FWHM data
 # jswift 4/15/2015: Added simple histogram plotting function.
+
 #
+# dklink 4/25/2015: Wrote daygrapher
+#                   Added empty/weird string handling and nan removal to FWHM_ave
+#                   Added high-value data vetting (>50) to vetter
+#
+# dklink 4/30/2015: Finished get_FWHM_data_range
+#                   Wrote graph_FWHM_data_range
 ######################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 import pdb
 import matplotlib as mpl
 import datetime
+import glob
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -83,7 +93,7 @@ def distparams(dist):
 
 
 def get_data(year=2015,month=3,day=6,
-             path='/Users/jonswift/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+             path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/', filename = ''):
 
     """
     Description:
@@ -94,6 +104,8 @@ def get_data(year=2015,month=3,day=6,
     Example:
     --------
     data = get_data(year=2015,month=3,day=6)
+    or
+    data = get_data(filename='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/')
 
 
     To do:
@@ -107,7 +119,10 @@ def get_data(year=2015,month=3,day=6,
     root = str(year)+'-'+str(month)+'-'+str(day)
     suffix = '.log'
 
-    file = path+prefix+root+suffix
+    if filename == '':
+        file = path+prefix+root+suffix
+    else:
+        file = filename
 
     # Read first section of data (tab delimited and uniform)
     d1 = np.loadtxt(file, dtype=[('time', '|S8'), ('date', '|S10'), ('Fmin', 'i6'),
@@ -196,14 +211,22 @@ def FWHM_ave(data,clip=False,sigmas=False):
     """
 
     raw = data['FWHMraw']
+    
     sz = len(raw)
     FWHM = np.ones(sz)* np.nan
     sigma = np.ones(sz)* np.nan
     for i in range(sz):
-        vals = np.array(raw[i]).astype('float')
-        nvals = len(vals)
-        minval = np.min(vals)
-        maxval = np.min(vals)
+        #remove empty strings from data before processing
+        if '' in raw[i]:
+            raw[i].remove('')
+            
+        #safeguard against wierd string formatting errors
+        try:
+            vals = np.array(raw[i]).astype('float')
+        except ValueError:
+            vals = [0]
+        
+        
         if clip:
             newvals, low, high = sigmaclip(vals,low=clip,high=clip)
             FWHM[i] = np.mean(newvals)
@@ -212,6 +235,7 @@ def FWHM_ave(data,clip=False,sigmas=False):
             FWHM[i] = np.mean(vals)
             sigma[i] = np.std(vals)
 
+    FWHM = np.nan_to_num(FWHM)
     if sigmas:
         return [FWHM,sigma]
     else:
@@ -262,6 +286,8 @@ def vet_FWHM_series(time,raw):
     
     Timestamp for data is also input so that vetted data contains corresponding
     timestamp.
+    
+    Also vets values over 50, which appear to come in as the sun is rising and setting
 
     
     """
@@ -283,6 +309,10 @@ def vet_FWHM_series(time,raw):
     keep2, = np.where(new != 0.08)
     new = new[keep2]
     newt = time[keep2]
+    
+    keep3, = np.where(new < 10)
+    new = new[keep3]
+    newt = time[keep3]
     
     FWHM = new.astype('float')
 
@@ -306,3 +336,65 @@ def fwhm_hist(vec):
     mpl.rcdefaults()
     return
 
+def FWHM_day_graph(year=2015, month=3, day=15):
+    """
+    Description:
+    ------------
+    Get FWHM data from the given day, vet it, and then display it in a histogram.
+    """
+    
+    data = get_data(year, month, day) #assumes default path is correct
+    FWHM_data = FWHM_ave(data)
+    time = data['timefloat']
+    
+    vetted_data = vet_FWHM_series(time,FWHM_data)[1]
+    if len(vetted_data) == 0:
+        print "Wow, that day really had shitty data."
+    else:
+        fwhm_hist(vetted_data)
+    
+
+    mpl.rcdefaults()
+    return
+
+def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
+                   end_date=datetime.datetime(2015,4,15),
+                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+    files = glob.glob(path+'seeing_log*.log')
+
+    keepfiles = []
+    for f in files:
+        datestr = f.split('_')[-1].split('.')[0]
+        date = datetime.datetime(np.int(datestr.split('-')[0]),\
+                                  np.int(datestr.split('-')[1]),\
+                                  np.int(datestr.split('-')[2]))
+        if date >= start_date and date <= end_date:
+            keepfiles.append(f)
+
+    # Need to loop through these files and accumulate data
+
+    all_FWHM_data = []
+    
+    for fname in keepfiles:
+        temp_data = get_data(filename=fname)
+        FWHM_data = FWHM_ave(temp_data)
+        time = temp_data['timefloat']
+        
+        vetted_data = vet_FWHM_series(time,FWHM_data)[1]
+        all_FWHM_data.extend(vetted_data)
+    
+    return all_FWHM_data
+    
+def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
+                   end_date=datetime.datetime(2015,4,15),
+                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+    
+    
+    data = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path)
+    pdb.set_trace()
+    plt.ion()
+    plt.figure()
+    plt.hist(data, bins=50)
+    
+    plt.rcdefaults()
+    return
