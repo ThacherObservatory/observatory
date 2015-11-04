@@ -13,13 +13,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+import time,datetime,glob,pdb
 from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
-import pdb
 import matplotlib as mpl
-import datetime
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -74,7 +72,7 @@ def distparams(dist):
 
 
 
-def get_data(year=2015,month=10,day=1,
+def get_day_data(year=2015,month=10,day=1,
              path='/Users/jonswift/Dropbox (Thacher)/Observatory/CloudSensor/Data/'):
 
     """
@@ -98,17 +96,58 @@ def get_data(year=2015,month=10,day=1,
     file = str(year)+'-'+str(month).zfill(2)+'-'+str(day).zfill(2)+'.txt'
     filename = path+file
 
-    # Read first section of data (tab delimited and uniform)
-    d1 = np.loadtxt(filename, dtype=[ ('date', '|S10'), ('time', '|S11'), ('tag1', '|S1'),
-                                 ('tag2', '|S2')], usecols=(0,1,2,3))
+    test = glob.glob(filename)
+    if len(test) == 0:
+        print 'File '+file+' not found in directory'
+        print '     '+path
+        return []
+    
+    # Read data line by line
+    f = open(filename)
+    content = [x.strip('\n').strip('\r') for x in f.readlines()]
+    date = []; time = []; hval = [] ; Dval = [] ;Eval = [] ;Cval = [] ;Wval = []
+    Rval = [] ;oneval = [] ;cval = []; SKY = []; AMB = []; WIND = []; wval = []
+    rval = []; HUM = [] ;DEW = [] ;CASE = [] ; HEA = []; BLKT = []; Hval = []; PWR = []
+    WNDTD = []; WDROP = []; WAVG = []; WDRY = []; RHT = []; AHT = []; ASKY = []
+    ACSE = []; APSV = []; ABLK = []; AWND = []; AVNE = [] ; DKMPH = [] ; VNE = []
+    RWOSC = []; D = []; ADAY = []; PH = [] ; CN = []; T = []; S = []
+    f.close()
+    
+    counter = 0
+    for c in content:
+        if c[26:28] == '~D':
+            counter += 1
+            date.append(c[0:10])
+            time.append(c[11:22])
+            hval.append(c[23])
+            Dval.append(c[26:28])
+            Eval.append(c[29])
+            Cval.append(c[31])
+            Wval.append(c[33])
+            Rval.append(c[35])
+            oneval.append(c[37])
+            cval.append(c[39])
+            SKY = np.append(SKY,np.float(c[41:47]))
+            AMB = np.append(AMB,np.float(c[48:53]))
+            WIND = np.append(WIND,np.float(c[54:59]))
+            wval.append(c[60])
+            rval.append(c[62])
+            HUM = np.append(HUM,np.float(c[64:67]))
+            DEW = np.append(DEW,np.float(c[68:73]))
+            CASE = np.append(CASE,np.float(c[74:79]))
+            HEA = np.append(HEA,np.float(c[80:83]))
+            BLKT = np.append(BLKT,np.float(c[84:89]))
+            Hval.append(c[90])
+            PWR = np.append(PWR,np.float(c[92:96]))
+            WNDTD = np.append(WNDTD,np.float(c[97:102]))
+            if counter > 1:
+                ADAY = np.append(ADAY,np.float(c[176:181]))
+            else:
+                ADAY = np.append(ADAY,np.nan)
+        else:
+            counter = 0
 
-                                      # ('FWHMave', 'f6'), ('npts', 'i2')],usecols=(0,1,2,3,4,5))
-
-    # Read in second section of data (; delimited and not uniform)
-    d2raw = np.loadtxt(file, delimiter=[0],dtype='str')
-    d2 = []
-    for i in np.arange(len(d2raw)):
-        d2.append(d2raw[i][37:90].split(';')[0:-1])
+    pdb.set_trace()
 
     # create null vectors of interest
     yearv = [] ; monthv = [] ; dayv = [] ; doyv = [] ; time24v = [] ; dt =[]

@@ -148,7 +148,7 @@ def check_ast(file):
 
 
 
-def show_image(file,lowsig=1,hisig=4,skyonly=False):
+def show_image(file,lowsig=1,hisig=4,skyonly=False,write=False):
 
     # Get image and header
     image, header = pf.getdata(file, 0, header=True)
@@ -175,7 +175,9 @@ def show_image(file,lowsig=1,hisig=4,skyonly=False):
                interpolation='nearest',origin='upper')
     plt.axis('off')
     plt.colorbar()
-
+    if write:
+        plt.savefig('AllSkyImage.png',dpi=300)
+    
     return
 
     
@@ -207,7 +209,7 @@ def CreateMovie(FrameFiles, fps=30, filename='AllSkyMovie',lowsig=1.0,hisig=4.0,
         image, header = pf.getdata(file, 0, header=True)        
 
         date = header['DATE-OBS']
-        time = header['TIME-OBS']
+        time = 'UT'+header['TIME-OBS']
         
         # Keep region determined by eye
         image = image[:,200:1270]

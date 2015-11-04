@@ -83,12 +83,14 @@ def get_data(year=2012,dpath='./'):
     
     print "Getting weather data for the year of "+str(year)
     # load data
-    data = np.loadtxt(filename,dtype='str',skiprows=3)
+    data = np.loadtxt(dpath+filename,dtype='str',skiprows=3)
 
     # extract data from numpy array
     windhi = data[:,11].astype('float')
     winddir = data[:,12]
+    # AM or PM?
     tod = data[:,2]
+    # Universal Time (UT)
     time = data[:,1]
     date = data[:,0]
 
