@@ -4,12 +4,6 @@
 #
 # To do:
 # ------
-# - Data vetting (zeros)
-# - Convert the date and time into "datetime" objects in "get_data"
-# - Develop simple plotting routines for data including time series
-#   FWHM, histograms, and peak to peak intensity fluctuations.
-# - Develop routine to read multiple days of data
-# - Develop method to take all data and plot it, presentation worthy formatting
 # 
 # History:
 # --------
