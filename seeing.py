@@ -20,7 +20,10 @@
 #
 # dklink 4/30/2015: Finished get_FWHM_data_range
 #                   Wrote graph_FWHM_data_range
+#
 ######################################################################
+
+# Put in some stuff here
 
 import numpy as np
 import matplotlib.pyplot as plt
