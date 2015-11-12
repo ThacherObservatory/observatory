@@ -28,7 +28,6 @@ import time
 from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
-import pdb
 import matplotlib as mpl
 import datetime
 import glob
@@ -381,14 +380,12 @@ def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
     
 def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
                    end_date=datetime.datetime(2015,4,15),
-                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',bins=50):
     
     
     data = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path)
-    pdb.set_trace()
     plt.ion()
-    plt.figure()
-    plt.hist(data, bins=50)
-    
+    plt.clf()
+    plt.hist(data, bins=bins)
     plt.rcdefaults()
     return
