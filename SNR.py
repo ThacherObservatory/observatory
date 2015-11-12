@@ -3,10 +3,8 @@ import numpy as np
 
 
 
-def test_image(center=None,snr=None,sigma=20,floor=500,size=200,seeing=3,
+def test_image(center=None,snr=None,sigma=1,floor=500,size=200,seeing=3,
                flux=100):
-
-    flux *= sigma
 
     image = np.random.normal(floor,sigma,(size,size))
 
