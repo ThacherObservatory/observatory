@@ -23,8 +23,6 @@
 #
 ######################################################################
 
-# Put in some stuff here
-
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -89,7 +87,7 @@ def distparams(dist):
 
 
 
-def get_data(year=2015,month=3,day=6,
+def get_data(year=2015,month=3,day=6,uniform=True,
              path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/', filename = ''):
 
     """
