@@ -6,5 +6,7 @@ It's not recognizing weather and seeing
 import weather as w
 import seeing as s
 
-weather_data = w.get_data()
-seeing_data = s.get_data()
+wpath = '/Users/nickedwards/python/data/weather/'
+spath = '/Users/nickedwards/python/data/seeing/'
+weather_data = w.get_data(dpath=wpath)
+seeing_data = s.get_data(path=spath)
