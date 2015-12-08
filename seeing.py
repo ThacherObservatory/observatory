@@ -87,8 +87,9 @@ def distparams(dist):
 
 
 
-def get_data(year=2015,month=3,day=6,uniform=True,
-             path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/', filename = ''):
+def get_data(year=2015,month=3,day=6,tenmin=False,
+             path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',
+             filename = ''):
 
     """
     Description:
@@ -159,13 +160,25 @@ def get_data(year=2015,month=3,day=6,uniform=True,
         doyv = np.append(doyv,d.timetuple().tm_yday+np.float(hr)/
                          24.0+mn/(24.0*60.0)+sec/(24.0*3600.0))
 
+    d1time = d1['time']; d1date = d1['date']; d1fmin = d1['Fmin']
+    d1fmax = d1['Fmax']; d1fave = d1['FWHMave']; d1npts = d1['npts']
+    
+    if tenmin and year <= 2015 and month <= 4:
+        dt = dt[::10]
+        doyv = doyv[::10]
+        time24v = time24v[::10]
+        d1time = d1time[::10]
+        d1date = d1date[::10]
+        d1fmin = d1fmin[::10]
+        d1fmax = d1fmax[::10]
+        d1fave = d1fave[::10]
+        d1npts = d1npts[::10]
+        d2 = d2[::10]
         
     # Put all data together into a dictionary
     data = {"datetime": dt, "doy": doyv, "timefloat": time24v,
-            "time": d1["time"], "date": d1["date"],
-            "Fmin": d1["Fmin"], "Fmax": d1["Fmax"],
-            "FWHMave": d1["FWHMave"], "npts": d1["npts"],
-            "FWHMraw": d2}
+            "time": d1time, "date": d1date,"Fmin": d1fmin, "Fmax": d1fmax,
+            "FWHMave": d1fave, "npts": d1npts,"FWHMraw": d2}
 
     return data
 
@@ -313,6 +326,8 @@ def vet_FWHM_series(time,raw):
 
     return newt, FWHM
 
+
+
 def fwhm_hist(vec):
 
     plot_params()
@@ -353,8 +368,9 @@ def FWHM_day_graph(year=2015, month=3, day=15):
     return
 
 def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
-                   end_date=datetime.datetime(2015,4,15),
+                        end_date=datetime.datetime(2015,4,15),tenmin=True,
                    path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+
     files = glob.glob(path+'seeing_log*.log')
 
     keepfiles = []
@@ -371,25 +387,52 @@ def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
     all_FWHM_data = []
     
     for fname in keepfiles:
-        temp_data = get_data(filename=fname)
+        temp_data = get_data(filename=fname,tenmin=tenmin)
         FWHM_data = FWHM_ave(temp_data)
         time = temp_data['timefloat']
         
         vetted_data = vet_FWHM_series(time,FWHM_data)[1]
         all_FWHM_data.extend(vetted_data)
-    
+            
     return all_FWHM_data
-    
+
+
 def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
-                   end_date=datetime.datetime(2015,4,15),
-                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+                          end_date=datetime.datetime(2015,4,15),tenmin=True,
+                          path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',
+                          write=True):
     
     
-    data = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path)
-    pdb.set_trace()
+    plot_params()
+    fwhm = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path, tenmin=tenmin)
+
+    # Basic stats
+    med = np.median(fwhm)
+    mean = np.mean(fwhm)
+    fwhm_clip, low, high = sigmaclip(fwhm,low=3,high=3)
+    meanclip = np.mean(fwhm_clip)
+
+    # Get mode using kernel density estimation (KDE)
+    vals = np.linspace(0,30,1000)
+    fkde = gaussian_kde(fwhm)
+    fpdf = fkde(vals)
+    mode = vals[np.argmax(fpdf)]
+    std = np.std(fwhm)
+
+
     plt.ion()
-    plt.figure()
-    plt.hist(data, bins=50)
+    plt.figure(99)
+    plt.clf()
+    plt.hist(fwhm, color='darkgoldenrod',bins=35)
+    plt.xlabel('FWHM (arcsec)',fontsize=16)
+    plt.ylabel('Frequency',fontsize=16)
+    plt.annotate('mean = %.2f" ' % mean, [0.87,0.85],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    plt.annotate('median = %.2f" ' % med, [0.87,0.8],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    plt.annotate('mode = %.2f" ' % mode, [0.87,0.75],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+
     
     plt.rcdefaults()
     return
