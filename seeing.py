@@ -31,8 +31,7 @@ from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 import pdb
 import matplotlib as mpl
-import datetime
-import glob
+import datetime, glob, math
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -400,7 +399,7 @@ def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
 def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
                           end_date=datetime.datetime(2015,4,15),tenmin=True,
                           path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',
-                          write=True):
+                          write=True,outpath='./'):
     
     
     plot_params()
@@ -426,13 +425,34 @@ def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
     plt.hist(fwhm, color='darkgoldenrod',bins=35)
     plt.xlabel('FWHM (arcsec)',fontsize=16)
     plt.ylabel('Frequency',fontsize=16)
-    plt.annotate('mean = %.2f" ' % mean, [0.87,0.85],horizontalalignment='right',
+    plt.annotate('mode $=$ %.2f" ' % mode, [0.87,0.85],horizontalalignment='right',
                  xycoords='figure fraction',fontsize='large')
-    plt.annotate('median = %.2f" ' % med, [0.87,0.8],horizontalalignment='right',
+    plt.annotate('median $=$ %.2f" ' % med, [0.87,0.8],horizontalalignment='right',
                  xycoords='figure fraction',fontsize='large')
-    plt.annotate('mode = %.2f" ' % mode, [0.87,0.75],horizontalalignment='right',
+    plt.annotate('mean $=$ %.2f" ' % mean, [0.87,0.75],horizontalalignment='right',
                  xycoords='figure fraction',fontsize='large')
 
+    xvals = np.linspace(0,30,1000)
+    kde = gaussian_kde(fwhm)
+    pdf = kde(xvals)
+    dist_c = np.cumsum(pdf)/np.sum(pdf)
+    func = interp1d(dist_c,vals,kind='linear')
+    lo = np.float(func(math.erfc(1./np.sqrt(2))))
+    hi = np.float(func(math.erf(1./np.sqrt(2))))
+
+    disthi = np.linspace(.684,.999,100)
+    distlo = disthi-0.6827
+    disthis = func(disthi)
+    distlos = func(distlo)
+
+    interval = np.min(disthis-distlos)
+
+    plt.annotate('1 $\sigma$ int. $=$ %.2f" ' % interval, [0.87,0.70],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    
     
     plt.rcdefaults()
+
+    plt.savefig(outpath+'Seeing_Cumulative.png',dpi=300)
+
     return
