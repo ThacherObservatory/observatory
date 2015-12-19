@@ -120,10 +120,10 @@ def get_data(year=2015,month=3,day=6,tenmin=False,
         file = filename
 
     # Read first section of data (tab delimited and uniform)
-    d1 = np.loadtxt(file, dtype=[('time', '|S8'), ('date', '|S10'), ('Fmin', 'i6'),
-                                 ('Fmax', 'i6'), ('FWHMave', 'f6'), ('npts', 'i2')],
+    d1 = np.loadtxt(file, dtype=[('time', '|S8'), ('date', '|S10'), ('Fmin', np.int),
+                                 ('Fmax', np.int), ('FWHMave', np.float), ('npts', np.int)],
                     usecols=(0,1,2,3,4,5))
-
+    
     # Read in second section of data (; delimited and not uniform)
     d2raw = np.loadtxt(file, delimiter=[0],dtype='str')
     d2 = []
