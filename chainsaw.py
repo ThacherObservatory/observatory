@@ -24,11 +24,11 @@ wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
 spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
 # Get raw data. Must choose an overlapping time range
 weather_data = w.get_data(dpath=wpath,year=2015)
-pdb.set_trace()
+# pdb.set_trace()
 seeing_data = s.get_data(path=spath,year=2015,month=3,day=6)
 
 #Make this more robust
-def interpolate():
+def interpolate(longversion=False):
     # Plot limits, will update later
 
     #min1 = 0.0
@@ -84,7 +84,10 @@ def interpolate():
     plt.plot(dt_seeing,humidity_interp,'-',label='interpolated humidity')
     plt.legend(loc='best')
     
-    
+    if longversion:
+        return humidity, fwhm, dt_weather, dt_seeing, tseeing, tweather
+
+
 """
 # scatter plot of humidity vs seeing
 # probabaly plt.plot(seeing,humidity)
