@@ -1,12 +1,10 @@
 """
 To Do:
-Match weather data to seeing data by time. 
-Start to make graphs and fix plot limits
+- Make it so that humidity and fwhm arrays have the same
+  amount out elements in order to be able to plot them.
 
-History:
-
-11/21/15
-nedwards: Changed dist variables, added fs and year variable
+- Make interpolate() more robust by makeing data 
+dictionaries interchangable.
 
 """
 
@@ -18,70 +16,83 @@ from statsmodels.nonparametric.kernel_density import KDEMultivariate as KDE
 import robust as rb
 import matplotlib as mpl
 from scipy.interpolate import interp1d
-import calendar
+import calendar,sys
+import pdb
 
 
-wpath = '/Users/nickedwards/python/data/weather/'
-spath = '/Users/nickedwards/python/data/seeing/'
+wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
+spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
 # Get raw data. Must choose an overlapping time range
 weather_data = w.get_data(dpath=wpath,year=2015)
+pdb.set_trace()
 seeing_data = s.get_data(path=spath,year=2015,month=3,day=6)
 
-# Plot limits, will update later
+#Make this more robust
+def interpolate():
+    # Plot limits, will update later
 
-#min1 = 0.0
-#max1 = 360.0
-#min2 = 0
-#sigfac = 3
-#sigsamp = 5
-
-# Get data of interest
-
-# FWHM data must be vetted for outliers first
-dt_seeing,fwhm = s.vet_FWHM_series(seeing_data['datetime'],seeing_data['FWHMave'])
-
-# Weather data
-humidity   = weather_data['humidity']
-dt_weather = weather_data['datetime']
-
-# Make sure data overlap in time...
-# select out the indices of the weather data that overlap
-# with the seeing data
-inds, = np.where((dt_weather >= np.min(dt_seeing)) &
-                 (dt_weather <= np.max(dt_seeing)))
-dt_weather = dt_weather[inds]
-humidity = humidity[inds]
-
-inds, = np.where((dt_seeing >= np.min(dt_weather)) &
-                 (dt_seeing <= np.max(dt_weather)))
-dt_seeing = dt_seeing[inds]
-fwhm = fwhm[inds]
-
-# Take a look
-plt.ion()
-plt.figure(1)
+    #min1 = 0.0
+    #max1 = 360.0
+    #min2 = 0
+    #sigfac = 3
+    #sigsamp = 5
+    
+    # Get data of interest
+    
+    # FWHM data must be vetted for outliers first
+    dt_seeing,fwhm = s.vet_FWHM_series(seeing_data['datetime'],seeing_data['FWHMave'])
+    
+    # Weather data
+    humidity   = weather_data['humidity']
+    dt_weather = weather_data['datetime']
+    
+    # Make sure data overlap in time...
+    # select out the indices of the weather data that overlap
+    # with the seeing data
+    # inds is elements in the original order ORDER MATTERS
+    inds, = np.where((dt_weather >= np.min(dt_seeing)) &
+                     (dt_weather <= np.max(dt_seeing)))
+    dt_weather = dt_weather[inds]
+    humidity = humidity[inds]
+                     
+    inds, = np.where((dt_seeing >= np.min(dt_weather)) &
+                     (dt_seeing <= np.max(dt_weather)))
+    dt_seeing = dt_seeing[inds]
+    fwhm = fwhm[inds]
+    
+    # Take a look
+    plt.ion()
+    plt.figure(1)
+    plt.clf()
+    plt.plot(dt_seeing,fwhm,'o',label='FWHM')
+    plt.plot(dt_weather,humidity,'o',label='humidity')
+    plt.xlim(np.min(dt_seeing),np.max(dt_seeing))
+    
+    # Grid weather data to seeing data timestamp
+    
+    # need to turn datetime objects into numerical dates, first
+    def toTimestamp(d):
+        return calendar.timegm(d.timetuple())
+        
+    tseeing  = np.array([toTimestamp(d) for d in dt_seeing])
+    tweather = np.array([toTimestamp(d) for d in dt_weather])
+    
+    # now interpolate
+    interp_func = interp1d(tweather,humidity,kind='linear')
+    humidity_interp = interp_func(tseeing)
+    
+    plt.plot(dt_seeing,humidity_interp,'-',label='interpolated humidity')
+    plt.legend(loc='best')
+    
+    
+"""
+# scatter plot of humidity vs seeing
+# probabaly plt.plot(seeing,humidity)
+plt.figure(2)
 plt.clf()
-plt.plot(dt_seeing,fwhm,'o',label='FWHM')
-plt.plot(dt_weather,humidity,'o',label='humidity')
-plt.xlim(np.min(dt_seeing),np.max(dt_seeing))
-
-# Grid weather data to seeing data timestamp
-
-# need to turn datetime objects into numerical dates, first
-def toTimestamp(d):
-  return calendar.timegm(d.timetuple())
-
-tseeing  = np.array([toTimestamp(d) for d in dt_seeing])
-tweather = np.array([toTimestamp(d) for d in dt_weather])
-
-# now interpolate
-interp_func = interp1d(tweather,humidity,kind='linear')
-humidity_interp = interp_func(tseeing)
-
-plt.plot(dt_seeing,humidity_interp,'-',label='interpolated humidity')
-plt.legend(loc='best')
-
-
+plt.plot(fwhm,humidity)
+"""
+sys.exit()
 
 med1 = np.median(dist1)
 sig1 = rb.std(dist1)
