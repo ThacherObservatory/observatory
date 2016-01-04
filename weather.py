@@ -7,6 +7,7 @@ import glob
 import os
 import pdb
 import math
+import pandas as pd
 
 def clean_float(vector):
     """ 
@@ -63,9 +64,109 @@ def distparams(dist):
     return med,mode,interval,lo,hi
 
 
-def get_data(year=2012,dpath='./'):
+
+def get_data(year=2015,dpath='./'):
     """
-    Procedure to parse data from Davis weather station
+    Procedure to parse data from the new Davis weather station at the observatory
+
+    Data file must be named in the following convention:
+
+    WeatherLink_Data_YYYY.txt
+
+    where YYYY is the year. Also, procedure assumes the file header
+    takes up the first 2 lines of the file.
+
+    Inputs are the year of the data and the path to the data file
+    """
+
+    
+    filename = 'WeatherLink_Data_'+str(year)+'.txt'
+
+    test = os.path.exists(dpath+filename)
+
+    if not test:
+        print "Cannot find data file: "+filename
+        return []
+
+    # Kludge to get around a really incovenient header scheme
+    d1 = pd.read_table(dpath+filename,nrows=2,skiprows=0,header=None)
+    d1 = d1.fillna('')
+    header = [name.strip() for name in d1.ix[0]+d1.ix[1]]
+    
+    print "Getting weather data for the year of "+str(year)
+    data =  pd.read_table(dpath+filename,skiprows=2,header=0,names=header)
+
+    # Construct datetime objects then inject them into the DataFrame
+    time_orig = np.array(data['Time'])
+    date = np.array(data['Date'])
+    tod = np.array([ampm[-1:] for ampm in time_orig])
+    time = [t[0:-2] for t in time_orig]
+
+    windhi = data['HiSpeed']
+    winddir = data['HiDir']
+    
+    # unique set of dates
+    udate = np.unique(date)
+    out = "... {0:.0f} days of data taken in "+str(year)
+    print out.format(len(udate))
+
+    seconds = 0
+    milliseconds = 0
+
+    # create null vectors of interest
+    yearv = [] ; monthv = [] ; dayv = [] ; doyv = [] ; time24v = [] ; winddir_deg = [] ; dt =[]
+
+    # conversion from compass points to azimuth
+    compass   = np.array(['N','NNE', 'NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'])
+    direction = np.arange(0,360,22.5)
+
+    print 'Creating universal timestamps...'
+    
+    # parse data
+    for i in range(len(date)):
+        yr = np.int(date[i].split('/')[2])+2000
+        yearv = np.append(yearv,yr)
+
+        month = np.int(date[i].split('/')[0])
+        monthv = np.append(monthv,month)
+        
+        day = np.int(date[i].split('/')[1])
+        dayv = np.append(dayv,day)
+        
+        hr = np.int(time[i].split(':')[0])
+        if tod[i] == 'p' and hr < 12:
+            hr += 12
+        if tod[i] == 'a' and hr == 12:
+            hr -= 12
+
+        mn = np.int(time[i].split(':')[1])
+
+        time24v = np.append(time24v,hr+mn/60.0)
+
+        d = datetime.datetime(yr,month,day,hr,mn,seconds,milliseconds)
+        dt = np.append(dt,d)
+        doyv = np.append(doyv,d.timetuple().tm_yday+np.float(hr)/24.0+np.float(mn)/(24.0*60.0))
+
+        if windhi[i] != 0:
+            wi, = np.where(winddir[i] == compass)
+            winddir_deg = np.append(winddir_deg,direction[wi])
+        else:
+            winddir_deg = np.append(winddir_deg,np.nan)
+
+    # Add additional columns to the DataFrame like this:
+    data['datetime'] = pd.Series(dt, index=data.index)
+    data['Time24'] = pd.Series(time24v, index=data.index)
+    data['WindDirDeg'] = pd.Series(winddir_deg, index=data.index)
+    data['DayOfYear'] = pd.Series(doyv, index=data.index)
+
+ 
+    return data
+
+     
+    
+def get_old_data(year=2012,dpath='./'):
+    """
+    Procedure to parse data from the old Davis weather station on campus (Doc V's)
 
     Data file must be named in the following convention:
         WS_data_YYYY.txt
@@ -76,7 +177,9 @@ def get_data(year=2012,dpath='./'):
     """
 
     filename = 'WS_data_'+str(year)+'.txt'
+       
     test = os.path.exists(dpath+filename)
+
     if not test:
         print "Cannot find data file!"
         return []
