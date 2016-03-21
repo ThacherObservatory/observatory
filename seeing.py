@@ -107,6 +107,8 @@ def get_data(year=2015,month=3,day=6,tenmin=False,
     ------
     Make data reading more robust
 
+    !!! First line of data for FWHMraw has formatting errors
+
     """
 
     # Set up path and filename
@@ -188,7 +190,6 @@ def FWHM_all(data):
     ------------
     Extract a numpy array of all FWHM measurements vetted against zeros and 0.08 values
     which seem to be a saturation effect
-
     """
 
     raw = data["FWHMraw"]
@@ -327,32 +328,35 @@ def vet_FWHM_series(time,raw):
 
 
 
-def fwhm_hist(vec):
+def fwhm_hist(vec,bins=50):
 
     plot_params()
     plt.ion()
     plt.figure(33)
+    plt.clf()
     maxval = np.max(vec)
     minval = np.min(vec)
     std = np.std(vec)
     med = np.median(vec)
 
     vec = vec[vec < 5*std+med]
-    plt.hist(vec,bins=100)
+    plt.hist(vec,bins=bins)
     plt.xlabel('FWHM (arcsec)',fontsize=fs)
     plt.ylabel('Frequency',fontsize=fs)
 
     mpl.rcdefaults()
     return
 
-def FWHM_day_graph(year=2015, month=3, day=15):
+
+def FWHM_day_graph(year=2015, month=3, day=15,
+                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
     """
     Description:
     ------------
     Get FWHM data from the given day, vet it, and then display it in a histogram.
     """
     
-    data = get_data(year, month, day) #assumes default path is correct
+    data = get_data(year, month, day,path=path) #assumes default path is correct
     FWHM_data = FWHM_ave(data)
     time = data['timefloat']
     
