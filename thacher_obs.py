@@ -15,14 +15,17 @@ def timeloop(startDate, endDate, delta=timedelta(days=1)):
         yield currentDate
         currentDate += delta
 
+x = []
+y = []
 
-for t in timeloop(datetime(2007, 3, 30, 00, 00), 
-                          datetime(2007, 3, 30, 00, 00), 
+for t in timeloop(datetime(2016, 3, 29, 01, 00, 00), 
+                          datetime(2016, 3, 30, 01, 00, 00), 
                           delta=timedelta(hours=1)):
     thob.date = t
     sun = ephem.Sun(thob)
- #   x = sun.alt 
-  #  y = sun.az
-    
- #   pl.plot(x,y,'ro')
-    print"%s %f %f %f %f" % (thob.date, sun.alt, sun.az, sun.ra, sun.dec)
+    x.append(sun.alt) 
+    y.append(sun.az)
+
+pl.plot(x,y,'ro')
+pl.show()
+print"%s %f %f %f %f" % (thob.date, sun.alt, sun.az, sun.ra, sun.dec)
