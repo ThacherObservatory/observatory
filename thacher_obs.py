@@ -38,6 +38,7 @@ pl.title('Path of our SUN in one day')
 pl.xlabel('Azimuth')
 pl.ylabel('Altitude')
 pl.plot(x,y,'yo')
+pl.axhline(y=0, xmin=0, xmax=7, hold=None,color = 'b',linestyle = 'dashdot')
 pl.show()
 
 Equatorial_coordinates = pl.figure(2)
