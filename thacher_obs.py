@@ -7,3 +7,5 @@ thob.date = "2017/8/21 13.0"
 sun = ephem.Sun(thob)
 print sun.alt, sun.az
 print sun.ra, sun.dec
+
+# Hi
