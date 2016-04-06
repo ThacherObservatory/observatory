@@ -9,6 +9,7 @@ from astropy.io.fits import open
 import robust as rb
 from djs_photfrac_mb import *
 from scipy.ndimage import gaussian_filter 
+import matplotlib.pyplot as plt
 
 do_smooth = False
 
@@ -153,6 +154,8 @@ plt.imshow(newcal,vmin=vmin,vmax=vmax,cmap=cmap,interpolation='nearest', \
 plt.axis('off')
 plt.colorbar(shrink=0.65,aspect=10,ticks=[19,19.5,20,20.5,21,21.5,22], \
     orientation='horizontal',pad=0.075)
+#plt.colorbar(shrink=0.65,aspect=10,ticks=[19,19.5,20,20.5,21,21.5,22], \
+#    orientation='vertical',pad=0.075)
 plt.annotate('N',[0.53,0.91],horizontalalignment='center',xycoords='figure fraction',\
     fontsize=18)
 plt.annotate('S',[0.53,0.24],horizontalalignment='center',xycoords='figure fraction',\
@@ -163,4 +166,4 @@ plt.annotate('W',[0.785,0.58],horizontalalignment='center',xycoords='figure frac
     fontsize=18)
 plt.annotate(r'mags/arcsec$^2$',[0.5,0.07],horizontalalignment='center', \
              xycoords='figure fraction',fontsize=12)
-plt.savefig('SkyBrightness.png',dpi=1200)
+plt.savefig('v_colorbar.png',dpi=1200)
