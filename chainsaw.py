@@ -1,12 +1,3 @@
-"""
-To Do:
-- Make it so that humidity and fwhm arrays have the same
-  amount out elements in order to be able to plot them.
-
-- Make interpolate() more robust by makeing data 
-dictionaries interchangable.
-
-"""
 
 import weather as w
 import seeing as s
@@ -18,34 +9,32 @@ import matplotlib as mpl
 from scipy.interpolate import interp1d
 import calendar,sys
 import pdb
+from scipy.stats.stats import pearsonr
+from matplotlib.ticker import NullFormatter
 
+def load_data_seeing_old(year=2016,month=3,day=20):
+    spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
+    global seeing_data
+    seeing_data = s.get_data(path=spath,year=year,month=month,day=day)
 
-wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
-spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
-# Get raw data. Must choose an overlapping time range
-weather_data = w.get_data(dpath=wpath,year=2015)
-# pdb.set_trace()
-seeing_data = s.get_data(path=spath,year=2015,month=3,day=6)
+def load_data_weather_old(year=2016):
+    wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
+    global weather_data
+    weather_data = w.get_data(dpath=wpath,year=year)
+
 
 #Make this more robust
-def interpolate(longversion=False):
-    # Plot limits, will update later
+def interpolate(plot_interp=False,plot_corr=False,seeing='FWHMave',weather_key='OutHum'):
 
-    #min1 = 0.0
-    #max1 = 360.0
-    #min2 = 0
-    #sigfac = 3
-    #sigsamp = 5
-    
-    # Get data of interest
-    
     # FWHM data must be vetted for outliers first
-    dt_seeing,fwhm = s.vet_FWHM_series(seeing_data['datetime'],seeing_data['FWHMave'])
-    
+    dt_seeing,seeing = s.vet_FWHM_series(seeing_data['datetime'],seeing_data[seeing])
+
     # Weather data
-    humidity   = weather_data['humidity']
-    dt_weather = weather_data['datetime']
-    
+    weather   = weather_data[weather_key]
+
+    #changes weather time data to datetime to work with seeing time data
+    dt_weather = np.array([t.to_datetime() for t in weather_data['datetime']])
+
     # Make sure data overlap in time...
     # select out the indices of the weather data that overlap
     # with the seeing data
@@ -53,82 +42,101 @@ def interpolate(longversion=False):
     inds, = np.where((dt_weather >= np.min(dt_seeing)) &
                      (dt_weather <= np.max(dt_seeing)))
     dt_weather = dt_weather[inds]
-    humidity = humidity[inds]
-                     
+    weather = weather[inds]
+
     inds, = np.where((dt_seeing >= np.min(dt_weather)) &
                      (dt_seeing <= np.max(dt_weather)))
     dt_seeing = dt_seeing[inds]
-    fwhm = fwhm[inds]
-    
-    # Take a look
-    plt.ion()
-    plt.figure(1)
-    plt.clf()
-    plt.plot(dt_seeing,fwhm,'o',label='FWHM')
-    plt.plot(dt_weather,humidity,'o',label='humidity')
-    plt.xlim(np.min(dt_seeing),np.max(dt_seeing))
-    
-    # Grid weather data to seeing data timestamp
-    
+    seeing = seeing[inds]
+
     # need to turn datetime objects into numerical dates, first
     def toTimestamp(d):
         return calendar.timegm(d.timetuple())
-        
     tseeing  = np.array([toTimestamp(d) for d in dt_seeing])
     tweather = np.array([toTimestamp(d) for d in dt_weather])
-    
-    # now interpolate
-    interp_func = interp1d(tweather,humidity,kind='linear')
-    humidity_interp = interp_func(tseeing)
-    
-    plt.plot(dt_seeing,humidity_interp,'-',label='interpolated humidity')
-    plt.legend(loc='best')
-    
-    if longversion:
-        return humidity, fwhm, dt_weather, dt_seeing, tseeing, tweather
+
+    interp_func = interp1d(tweather,weather,kind='linear')
+    weather_interp = interp_func(tseeing)
+
+    if plot_interp:
+        plt.ion()
+        plt.figure(1)
+        plt.clf()
+        plt.plot(dt_seeing,seeing,'o',label='FWHM')
+        plt.plot(dt_weather,weather,'o',label=weather_key)
+        plt.xlim(np.min(dt_seeing),np.max(dt_seeing))
+        plt.plot(dt_seeing,weather_interp,'-',label='interpolated humidity')
+        plt.legend(loc='best')
+
+    #FINISH THIS MAKING SEPERATE PLOT FOR SEEING VS WEATHER_INTERP
+    if plot_corr:
+        plt.ion()
+        plt.figure(2)
+        plt.clf()
+        plt.plot(seeing,weather_interp,'o')
+        plt.xlabel('FWHM (arcsec)')
+        plt.ylabel('Humidity (%)')
+    return pearsonr(seeing, weather_interp)
+
+#talk to doc swift about time stamp stuff and how to navigate them
+def load_data_seeing(year=2016,month=3,day=20):
+    spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
+
+    if len(year)==1:
+        start_yr = year
+        stop_yr = year
+
+    elif len(month)==1:
+        start_mn = month
+        stop_mn = month
+
+    elif len(day)==1:
+        start_dy = day
+        stop_dy = day
+
+    elif len(year) > 2 or len(month) > 2 or len(day) > 2:
+        print "Fix year, month, or day amount"
+        return []
 
 
-"""
-# scatter plot of humidity vs seeing
-# probabaly plt.plot(seeing,humidity)
-plt.figure(2)
-plt.clf()
-plt.plot(fwhm,humidity)
-"""
-sys.exit()
+    #elif
+    #if date >= dt1 and date <= dt2:
+    # append
 
-med1 = np.median(dist1)
-sig1 = rb.std(dist1)
-datamin1 = np.min(dist1)
-datamax1 = np.max(dist1)
-    
+def load_data_weather(year=2016):
+    wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
 
-med2 = np.median(dist2)
-sig2 = rb.std(dist2)
-datamin2 = np.min(dist2)
-datamax2 = np.max(dist2)
-max2 = min(med2 + sigfac*sig2,datamax2)
+    if len(year)==1:
+        weather_data = w.get_data(dpath=wpath,year=year)
+        return weather_data
 
-X, Y = np.mgrid[min1:max1:100j, min2:max2:100j]
-positions = np.vstack([X.ravel(), Y.ravel()])
-values = np.vstack([dist1, dist2])
+    elif len(year)==2:
+        start_yr = year[0]
+        stop_yr = year[1]
 
-kernel = KDE(values,var_type='cc',bw=[sig1/sigsamp,sig2/sigsamp])
-Z = np.reshape(kernel.pdf(positions).T, X.shape)
+        if stop_yr < start_yr:
+            print "Fix year order, so that they are chronological"
+            return []
 
-aspect = (max1-min1)/(max2-min2) * 8.5/11.0
+        #write loop that can deal with year differences bigger than 2
+        #np.arange(2014,2018,1)
+        #Out[8]: array([2014, 2015, 2016, 2017])
+        #year_duration = np.arange(start_yr,stop_yr,1)
+        #data = []
+        #for i in year_duration[i]:
+            #data[]
+        if stop_yr-start_yr > 1:
+            print "Fix coming soon, please only have year increments of only 1"
+            return []
 
-w.plot_params()
-plt.ion()
-plt.figure(2,figsize=(11,8.5))
-plt.clf()
-ax = plt.subplot(111)
-ax.imshow(np.rot90(Z), cmap=plt.cm.CMRmap_r,aspect=aspect, \
-          extent=[min1, max1, min2, max2],origin='upper')
-ax.yaxis.labelpad = 12
-ax.set_xlabel(str(dist1),fontsize=fs)
-ax.set_ylabel(str(dist2),fontsize=fs)
-plt.title('Weather and Seeing Corralation at Thacher Observatory in '+str(year),fontsize=fs)
+        start_data = w.get_data(dpath=wpath,year=start_yr)
+        stop_data = w.get_data(dpath=wpath,year=stop_yr)
+        # fix dtypes
+        weather_data = {}
+        for key in start_data.keys():
+            weather_data[key] = np.append(start_data[key],stop_data[key])
+        return weather_data
 
-plt.savefig(str(dist1)+'by'+str(dist2)+str(year)+'.png',dpi=300)
-mpl.rcdefaults()
+    else:
+        print "Fix year amount."
+        return []
