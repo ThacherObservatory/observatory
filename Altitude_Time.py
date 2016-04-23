@@ -10,7 +10,7 @@ import numpy as np
 import ephem
 from scipy import interpolate
 
-# You should be on the devel branch
+# Sara wins!!!!
 
 def riseset(year, month, day, position):
     
