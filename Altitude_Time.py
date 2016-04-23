@@ -10,8 +10,7 @@ import numpy as np
 import ephem
 from scipy import interpolate
 
-# Hi
-
+# You should be on the devel branch
 
 def riseset(year, month, day, position):
     
