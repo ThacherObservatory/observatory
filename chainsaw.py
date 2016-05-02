@@ -28,17 +28,6 @@ import cloudsensor as cs
 import datetime
 import glob
 
-def load_data_seeing_old(year=2016,month=3,day=20):
-    spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
-    global seeing_data
-    seeing_data = s.get_data(path=spath,year=year,month=month,day=day)
-
-def load_data_weather_old(year=2016):
-    wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
-    global weather_data
-    weather_data = w.get_data(dpath=wpath,year=year)
-
-
 #Make this more robust
 def interpolate(plot_interp=False,plot_corr=False,weather_key='OutHum'):
 
@@ -168,9 +157,8 @@ def load_data_seeing(year=[2016],month=[3],day=[20]):
         sdata = s.get_data(path=spath,year=t.year,month=t.month,day=t.day)
         #talk to doc swift about indices
         FWHMave = np.append(FWHMave,sdata['FWHMave']) #vet series
-        sdatetime = np.append(dt,sdata['datetime'])
+        sdatetime = np.append(sdatetime,sdata['datetime'])
 
-    pdb.set_trace()
     sdatetime,FWHMave = s.vet_FWHM_series(sdatetime,FWHMave)
 
     return FWHMave, sdatetime
