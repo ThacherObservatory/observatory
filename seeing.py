@@ -32,6 +32,7 @@ from scipy.interpolate import interp1d
 import pdb
 import matplotlib as mpl
 import datetime, glob, math
+from length import length
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -305,6 +306,13 @@ def vet_FWHM_series(time,raw):
     for r in raw:
         new = np.append(new,round(r,2))
 
+    for t in time:
+        newt = np.append(newt,t)
+
+    if length(newt) != length(new):
+        print 'Time and data vectors not equal lengths!'
+        return None,None
+
     inds, = np.where(new == '')
 
     if inds:
@@ -312,15 +320,15 @@ def vet_FWHM_series(time,raw):
 
     keep1, = np.where(new != 0.0)
     new = new[keep1]
-    newt = time[keep1]
+    newt = newt[keep1]
 
     keep2, = np.where(new != 0.08)
     new = new[keep2]
-    newt = time[keep2]
+    newt = newt[keep2]
     
     keep3, = np.where(new < 10)
     new = new[keep3]
-    newt = time[keep3]
+    newt = newt[keep3]
     
     FWHM = new.astype('float')
 
