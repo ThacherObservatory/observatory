@@ -1,3 +1,16 @@
+##########################################
+#
+#    To Do (WEDNESDAY):
+#
+#
+#
+#   MEETING (MONDAY):
+# Comparing datetime objects
+#
+#
+##########################################
+
+#
 
 import weather as w
 import seeing as s
@@ -11,6 +24,9 @@ import calendar,sys
 import pdb
 from scipy.stats.stats import pearsonr
 from matplotlib.ticker import NullFormatter
+import cloudsensor as cs
+import datetime
+import glob
 
 def load_data_seeing_old(year=2016,month=3,day=20):
     spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
@@ -24,13 +40,12 @@ def load_data_weather_old(year=2016):
 
 
 #Make this more robust
-def interpolate(plot_interp=False,plot_corr=False,seeing='FWHMave',weather_key='OutHum'):
+def interpolate(plot_interp=False,plot_corr=False,weather_key='OutHum'):
 
-    # FWHM data must be vetted for outliers first
-    dt_seeing,seeing = s.vet_FWHM_series(seeing_data['datetime'],seeing_data[seeing])
-
+    dt_seeing = sdatetime
+    seeing = FWHMave
     # Weather data
-    weather   = weather_data[weather_key]
+    weather = weather_data[weather_key]
 
     #changes weather time data to datetime to work with seeing time data
     dt_weather = np.array([t.to_datetime() for t in weather_data['datetime']])
@@ -49,9 +64,9 @@ def interpolate(plot_interp=False,plot_corr=False,seeing='FWHMave',weather_key='
     dt_seeing = dt_seeing[inds]
     seeing = seeing[inds]
 
-    # need to turn datetime objects into numerical dates, first
     def toTimestamp(d):
         return calendar.timegm(d.timetuple())
+
     tseeing  = np.array([toTimestamp(d) for d in dt_seeing])
     tweather = np.array([toTimestamp(d) for d in dt_weather])
 
@@ -78,35 +93,93 @@ def interpolate(plot_interp=False,plot_corr=False,seeing='FWHMave',weather_key='
         plt.ylabel('Humidity (%)')
     return pearsonr(seeing, weather_interp)
 
-#talk to doc swift about time stamp stuff and how to navigate them
-def load_data_seeing(year=2016,month=3,day=20):
+#cloudsensor data function
+def load_data_seeing(year=[2016],month=[3],day=[20]):
     spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
+    year = np.array(year)
+    month = np.array(month)
+    day = np.array(day)
 
     if len(year)==1:
         start_yr = year
         stop_yr = year
 
-    elif len(month)==1:
+    if len(month)==1:
         start_mn = month
         stop_mn = month
 
-    elif len(day)==1:
+    if len(day)==1:
         start_dy = day
         stop_dy = day
 
-    elif len(year) > 2 or len(month) > 2 or len(day) > 2:
+    if len(year) > 2 or len(month) > 2 or len(day) > 2:
         print "Fix year, month, or day amount"
         return []
 
+    if len(year)==2:
+        start_yr = year[0]
+        stop_yr = year[1]
 
-    #elif
-    #if date >= dt1 and date <= dt2:
-    # append
+    if len(month)==2:
 
-def load_data_weather(year=2016):
+        start_mn = month[0]
+        stop_mn = month[1]
+
+    if len(day)==2:
+        start_dy = day[0]
+        stop_dy = day[1]
+
+    start_dt = datetime.datetime(start_yr,start_mn,start_dy)
+    stop_dt = datetime.datetime(stop_yr,stop_mn,stop_dy)
+
+    # if one day is loaded this is what happens
+
+    if start_dt - stop_dt == datetime.timedelta(0):
+        sdata = s.get_data(path=spath,year=start_dt.year,month=start_dt.month,day=start_dt.day)
+        FWHMave = sdata['FWHMave']
+        sdatetime = sdata['datetime']
+        sdatetime,FWHMave = s.vet_FWHM_series(sdatetime,FWHMave)
+        return FWHMave, sdatetime
+
+    # telling user to make chronological dates
+
+    if stop_dt - start_dt < datetime.timedelta(0):
+        print "Fix either year, month, and/or day so that the dates a chronological"
+        return []
+
+
+
+    sfiles = glob.glob(spath+'seeing_log_2*')
+
+    dt = []
+    for f in sfiles:
+        year,month,day = np.array(f.split('/')[-1].split('_')[-1].split('.')[0].split('-')).astype('int')
+        dt = np.append(dt,datetime.datetime(year,month,day))
+
+    inds, = np.where((dt>=start_dt)&(dt<=stop_dt))
+    goodfiles = np.array(sfiles)[inds]
+    gooddates = dt[inds]
+
+    FWHMave = []
+    sdatetime = []
+    for i in range(len(inds)):
+        f = goodfiles[i]
+        t = gooddates[i] #(.year .month. day)
+        sdata = s.get_data(path=spath,year=t.year,month=t.month,day=t.day)
+        #talk to doc swift about indices
+        FWHMave = np.append(FWHMave,sdata['FWHMave']) #vet series
+        sdatetime = np.append(dt,sdata['datetime'])
+
+    pdb.set_trace()
+    sdatetime,FWHMave = s.vet_FWHM_series(sdatetime,FWHMave)
+
+    return FWHMave, sdatetime
+
+def load_data_weather(year=[2016]):
     wpath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Weather/Data/'
 
     if len(year)==1:
+        year = year[0]
         weather_data = w.get_data(dpath=wpath,year=year)
         return weather_data
 
