@@ -1,7 +1,7 @@
 ##########################################
 #
 #    To Do (WEDNESDAY):
-#
+# Check for weirdness in OutHum
 #
 #
 #   MEETING (MONDAY):
@@ -83,6 +83,8 @@ def interpolate(plot_interp=False,plot_corr=False,weather_key='OutHum'):
     return pearsonr(seeing, weather_interp)
 
 #cloudsensor data function
+# 5/11/15 4:20 - 4:35 p
+# np.where(weather_data['OutHum'] == '---')
 def load_data_seeing(year=[2016],month=[3],day=[20]):
     spath = '/Users/nickedwards/Dropbox (Thacher)/Observatory/Seeing/Data/'
     year = np.array(year)
@@ -135,8 +137,6 @@ def load_data_seeing(year=[2016],month=[3],day=[20]):
     if stop_dt - start_dt < datetime.timedelta(0):
         print "Fix either year, month, and/or day so that the dates a chronological"
         return []
-
-
 
     sfiles = glob.glob(spath+'seeing_log_2*')
 
@@ -201,3 +201,6 @@ def load_data_weather(year=[2016]):
     else:
         print "Fix year amount."
         return []
+
+def vet(data):
+    np.delete(np.array(data), np.where(np.array(data) == '---'))
