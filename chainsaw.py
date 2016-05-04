@@ -28,6 +28,14 @@ import cloudsensor as cs
 import datetime
 import glob
 
+def seeing_hist():
+    FWHM, sdate = load_data_seeing(year=[2015,2016],month=[10,4],day=[1,17])
+    plt.ion()
+    plt.clf()
+    plt.figure(1)
+    plt.hist(FWHM,bins=75)
+    return FWHM, sdate
+
 #Make this more robust
 def interpolate(plot_interp=False,plot_corr=False,weather_key='OutHum'):
 
@@ -202,5 +210,39 @@ def load_data_weather(year=[2016]):
         print "Fix year amount."
         return []
 
-def vet(data):
-    np.delete(np.array(data), np.where(np.array(data) == '---'))
+def vet(data,keyword=False):
+    # Function that vets for keyword(s)
+    if keyword:
+        if len(keyword) == 1:
+            vetted_data = np.delete(np.array(data), np.where(np.array(data) == keyword[0]))
+            vets = np.array(data)[np.where(np.array(data) == keyword[0])]
+            return vetted_data, vets
+
+
+
+        """
+        vetted_data = []
+        vets = []
+        for i in range(len(keyword)):
+            # loop doesn't work because
+            ""
+            data = ['---','nan',123,12333]
+
+            keyword = ['nan','---']
+
+            if keyword:
+                vetted_data = []
+                vets = []
+                for i in range(len(keyword)):
+                    vetted_data = np.append(vetted_data,np.delete(np.array(data), np.where(np.array(data) == keyword[i])))
+                    vets = np.append(vets,np.array(data)[np.where(np.array(data) == keyword[i])])
+
+
+            vets == array(['nan', '---'], dtype='|S32')
+
+            vetted_data == array(['---', '123', '12333', 'nan', '123', '12333'], dtype='|S32')
+            ""
+            vetted_data = np.append(vetted_data,np.delete(np.array(data), np.where(np.array(data) == keyword[i])))
+            vets = np.append(vets,np.array(data)[np.where(np.array(data) == keyword[i])])
+            return vetted_data, vets
+            """
