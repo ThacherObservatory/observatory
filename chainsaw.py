@@ -27,13 +27,20 @@ from matplotlib.ticker import NullFormatter
 import cloudsensor as cs
 import datetime
 import glob
+from plot_params import *
 
 def seeing_hist():
-    FWHM, sdate = load_data_seeing(year=[2015,2016],month=[10,4],day=[1,17])
+    plot_params()
+    FWHM, sdate = load_data_seeing(year=[2015,2016],month=[10,4],day=[6,17])
     plt.ion()
     plt.clf()
     plt.figure(1)
-    plt.hist(FWHM,bins=75)
+    plt.hist(FWHM,bins=50)
+    plt.xlim(0,5)
+    plt.xlabel('FWHM',fontsize=18)
+    plt.ylabel('Frequency',fontsize=18)
+    med = np.median(FWHM)
+    plt.annotate('Median = %.2f' % med, [.85,.8], horizontalalignment='right',xycoords='figure fraction',fontsize=15)
     return FWHM, sdate
 
 #Make this more robust
@@ -163,11 +170,13 @@ def load_data_seeing(year=[2016],month=[3],day=[20]):
         f = goodfiles[i]
         t = gooddates[i] #(.year .month. day)
         sdata = s.get_data(path=spath,year=t.year,month=t.month,day=t.day)
-        #talk to doc swift about indices
-        FWHMave = np.append(FWHMave,sdata['FWHMave']) #vet series
+        FWHM_series = s.FWHM_ave(sdata)
+        FWHM_vet = s.vet_FWHM_series(sdata['datetime'],FWHM_series)
+        FWHMave = np.append(FWHMave,FWHM_vet)
         sdatetime = np.append(sdatetime,sdata['datetime'])
-
-    sdatetime,FWHMave = s.vet_FWHM_series(sdatetime,FWHMave)
+        pdb.set_trace()
+    #FWHMave = s.FWHM_ave(sdata)
+    #sdatetime,FWHMave = s.vet_FWHM_series(sdatetime,FWHMave)
 
     return FWHMave, sdatetime
 
