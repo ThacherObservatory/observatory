@@ -41,11 +41,13 @@ def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
 
 def p9Region():
     RA = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,0]
+    RA = np.append(RA[0:6],RA[8:len(RA)])
     Dec = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,1]
+    Dec = np.append(Dec[0:6],Dec[8:len(Dec)])
     plt.ion()
-    plt.figure()
+    plt.figure('p9')
     plt.clf()
-    plt.plot(RA,Dec,'.')
-    plt.xlabel('RA')
-    plt.ylabel('Dec')
-    plt.title('Region, in RA and Dec\nwhere Planet 9 could be')
+    plt.plot(Dec,RA,'.')
+    plt.xlabel('Dec')
+    plt.ylabel('RA')
+    plt.title('Region, in Dec and RA\nwhere Planet 9 could be')
