@@ -1,6 +1,6 @@
 # Nick Edwards
 # 09/21/2016
-# This code is for determining the various properties of the SNR equation
+# This code is for all your Planet 9 needs
 
 import numpy as np
 import SNR
@@ -12,9 +12,13 @@ import matplotlib.pyplot as plt
 # mlim should be between 22.5 - 25
 
 # Standard variables
+# number of pixels
 npix = 25.9
+# number of electrons per sec
 Fb = 3.0
+# gain on camera
 g = 1.9
+# zero point magnitude
 mzp = 22.5
 
 def integrationTime(snr,mlim):
