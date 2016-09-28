@@ -69,7 +69,13 @@ def p9Region():
     plt.ylabel('RA')
     plt.title('Region, in Dec and RA\nwhere Planet 9 could be')
 
+
 def findArea(n=1000):
+    lowerDec = Dec[6:17]
+    lowerRA = RA[6:17]
+    upperDec = np.append(Dec[0:6],Dec[17:len(Dec)])
+    upperRA = np.append(RA[0:6],RA[17:len(RA)])    
+        
     upperDec = Dec[6:18]
     upperRA = RA[6:18]
     lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
@@ -81,12 +87,11 @@ def findArea(n=1000):
     delta_x = ((upper_interpolate-lower_interpolate)/n)
     i = int(delta_x)
     
-    
-    
     plt.clf()
     plt.ion()
     plt.figure('sky area')
     plt.plot(upperDec,upperRA,'r.')
     plt.plot(lowerDec,lowerRA,'g.')
-
+    
+    return
 
