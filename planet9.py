@@ -66,10 +66,10 @@ def p9Region():
     plt.title('Region, in Dec and RA\nwhere Planet 9 could be')
 
 def findArea():
-    upperDec = Dec[6:17]
-    upperRA = RA[6:17]
-    lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
-    lowerRA = np.append(RA[0:6],RA[17:len(RA)])
+    lowerDec = Dec[6:17]
+    lowerRA = RA[6:17]
+    upperDec = np.append(Dec[0:6],Dec[17:len(Dec)])
+    upperRA = np.append(RA[0:6],RA[17:len(RA)])
     plt.ion()
     plt.figure('sky area')
     plt.plot(upperDec,upperRA,'r.')
