@@ -6,6 +6,10 @@ import numpy as np
 import SNR
 import matplotlib.pyplot as plt
 
+"""
+SNR EQUATION
+"""
+
 
 # Make sure vatiables are floats to avoid int division
 # snr should be between 5 - 20
@@ -43,11 +47,16 @@ def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
     plt.ylabel('Mlim')
     plt.title('Integration time as a\nfunction of SNR and Mlim')
 
+"""
+SKY AREA
+"""
+
+RA = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,0]
+RA = np.append(RA[0:6],RA[8:len(RA)])
+Dec = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,1]
+Dec = np.append(Dec[0:6],Dec[8:len(Dec)])
+
 def p9Region():
-    RA = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,0]
-    RA = np.append(RA[0:6],RA[8:len(RA)])
-    Dec = np.loadtxt("/Users/nickedwards/Downloads/P9BlackOnly.txt")[:,1]
-    Dec = np.append(Dec[0:6],Dec[8:len(Dec)])
     plt.ion()
     plt.figure('p9')
     plt.clf()
@@ -55,3 +64,15 @@ def p9Region():
     plt.xlabel('Dec')
     plt.ylabel('RA')
     plt.title('Region, in Dec and RA\nwhere Planet 9 could be')
+
+def findArea():
+    upperDec = Dec[6:17]
+    upperRA = RA[6:17]
+    lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
+    lowerRA = np.append(RA[0:6],RA[17:len(RA)])
+    plt.ion()
+    plt.figure('sky area')
+    plt.plot(upperDec,upperRA,'r.')
+    plt.plot(lowerDec,lowerRA,'g.')
+
+
