@@ -2,6 +2,7 @@
 # 09/21/2016
 # This code is for all your Planet 9 needs
 # K. O'Neill 9/27 minor changes
+# K. O'Neill 9/29 additions to findArea and started numPoint
 
 import numpy as np
 import SNR
@@ -74,7 +75,10 @@ def p9Region():
     plt.title('Region, in Dec and RA\nwhere Planet 9 could be')
 
 
-def findArea(n=1000):
+def findArea(n):
+    #improved but ISSUES EVERYWHERE
+    #for certain values of n (ex:10) seems to work, but for others error
+        #"A value in x_new is above the interpolation range"
     upperDec = Dec[6:18]
     upperRA = RA[6:18]
     lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
@@ -84,22 +88,29 @@ def findArea(n=1000):
 
     np.array(Dec)
     
-    #define width    
+    #define delta x - constant
     delta_x = ((Dec[15]-Dec[6])/n)
-    
-    
+    # create equally spaced values between low and high point
+    n_Dec = np.linspace(Dec[6],Dec[15],n)
+    #create delx variation for use in loop
+    del_x2 = delta_x/2
+    Area = []
     # height = (upper_interp - lower_interp)
     # width = delta_x * cos(dec)
     # Sum = np.sum(height * width)
+    
     for i in range(n):
-        width = np.cos(Dec) * delta_x        
-        height = (upper_interpolate[i]-lower_interpolate[i])
+        width = np.cos(n_Dec) * delta_x        
+        #to correct for upper/lower sum
+        height = upper_interpolate(i+del_x2)-lower_interpolate(i+del_x2)
+        Area = np.append(Area,height*width[i])
+    TotalArea = np.sum(Area)
 
-
-    plt.clf()
-    plt.ion()
-    plt.figure('sky area')
-    plt.plot(upperDec,upperRA,'r.')
-    plt.plot(lowerDec,lowerRA,'g.')
-
-    return
+    return TotalArea
+    
+def numPoint(n=100):
+    area = findArea(n)
+    field = 0.17
+    pointings = area/field
+    
+    return pointings
