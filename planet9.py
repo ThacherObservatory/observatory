@@ -30,7 +30,7 @@ mzp = 22.5
 # everyone write their own directory in a comment
 # and just uncomment it when you use the code
 
-#dir = '/Users/ONeill/Astronomy/'
+dir = '/Users/ONeill/Astronomy/'
 #dir = '/Users/nickedwards/Downloads/'
 
 def integrationTime(snr,mlim):
@@ -75,21 +75,26 @@ def p9Region():
 
 
 def findArea(n=1000):
-    lowerDec = Dec[6:17]
-    lowerRA = RA[6:17]
-    upperDec = np.append(Dec[0:6],Dec[17:len(Dec)])
-    upperRA = np.append(RA[0:6],RA[17:len(RA)])
-
     upperDec = Dec[6:18]
     upperRA = RA[6:18]
     lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
     lowerRA = np.append(RA[0:6],RA[17:len(RA)])
-
-    upper_interpolate = interpolate.interp1d(upperDec, upperRA, kind='linear')
     lower_interpolate = interpolate.interp1d(lowerDec, lowerRA, kind='linear')
+    upper_interpolate = interpolate.interp1d(upperDec, upperRA, kind='linear')
 
-    delta_x = ((upper_interpolate-lower_interpolate)/n)
-    i = int(delta_x)
+    np.array(Dec)
+    
+    #define width    
+    delta_x = ((Dec[15]-Dec[6])/n)
+    
+    
+    # height = (upper_interp - lower_interp)
+    # width = delta_x * cos(dec)
+    # Sum = np.sum(height * width)
+    for i in range(n):
+        width = np.cos(Dec) * delta_x        
+        height = (upper_interpolate[i]-lower_interpolate[i])
+
 
     plt.clf()
     plt.ion()
