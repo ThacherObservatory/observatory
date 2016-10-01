@@ -357,7 +357,7 @@ def wind_speed_direction(year=2013,peak=False):
     wdir = d["winddir_deg"]
     
     wind_rand = wind + np.random.normal(0,0.5,len(wind))
-    wdir_rand = wdir + np.random.normal(0,12,len(wdir))
+    wdir_rand = wdir + np.random.normal(0,1,len(wdir))
     bad = np.isnan(wdir_rand)
     wdir_rand[bad] = np.random.uniform(0,360,np.sum(bad))
 
@@ -397,7 +397,7 @@ def wind_speed_direction(year=2013,peak=False):
     ax.set_ylabel(word+'Wind Speed (mph)',fontsize=fs)
     plt.title('Wind Patterns at Thacher Observatory in '+str(year),fontsize=fs)
     
-    plt.savefig('Wind'+tag+'_Speed_Direction_'+str(year)+'.png',dpi=300)
+    #plt.savefig('Wind'+tag+'_Speed_Direction_'+str(year)+'.png',dpi=300)
     mpl.rcdefaults()
 
     return
