@@ -3,16 +3,34 @@
 # This code is for all your Planet 9 needs
 # K. O'Neill 9/27 minor changes
 # K. O'Neill 9/29 additions to findArea and started numPoint
-
+# J. Swift 9/30: - Added some useful functions including plate_scale,
+#                  npix, and get_path
+#                - Should probably program more of what is in my notebook
 import numpy as np
 import SNR
 import matplotlib.pyplot as plt
-from scipy import interpolate
+from scipy.interpolate import interp1d
+
+user = 'jswift' #'nick' and 'katie' are also defined users
 
 """
 SNR EQUATION
 """
 
+def plate_scale(mu=13.5,f=6.486,d=0.7):
+    """
+    Returns arcseconds per pixel for camera and telescope 
+    specifications
+
+    mu = size of a pixel in microns
+    f = focal ratio of the telescope
+    d = diameter of the telescope in meters
+    """
+
+    flen = f*d
+    arcsec_per_radian = 180.0/np.pi*3600.0
+    P = arcsec_per_radian*mu/(1e6*flen)
+    return P
 
 # Make sure vatiables are floats to avoid int division
 # snr should be between 5 - 20
@@ -20,19 +38,40 @@ SNR EQUATION
 
 # Standard variables
 # number of pixels
-npix = 25.9
-# number of electrons per sec
+ps = plate_scale()
+
+def npix(fwhm=3.0,ps=ps):
+    numpix = np.pi/4.0 * (fwhm/ps)**2
+    return numpix
+    
+numpix = npix(fwhm=3.0)
+
+
+# number of electrons per sec due to background
+# corresponds to 21 mag per square arcsec
+# Should program function to calculate this
 Fb = 3.0
-# gain on camera
+
+# camera gain
 g = 1.9
+
 # zero point magnitude
 mzp = 22.5
 
 # everyone write their own directory in a comment
 # and just uncomment it when you use the code
 
-dir = '/Users/ONeill/Astronomy/'
-#dir = '/Users/nickedwards/Downloads/'
+def get_path(user='katie'):
+    if user == 'katie':
+        dir = '/Users/ONeill/Astronomy/'
+    if user == 'nick':
+        dir = '/Users/nickedwards/Downloads/'
+    if user == 'jswift':
+        dir = '/Users/jonswift/Thacher/Teaching/Classes/Astronomy X Block/Fall 2016/'
+
+    return dir
+
+dir = get_path(user=user)
 
 def integrationTime(snr,mlim):
     snr = np.array(snr)
@@ -59,7 +98,6 @@ def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
 """
 SKY AREA
 """
-
 RA = np.loadtxt(dir+"P9BlackOnly.txt")[:,0]
 RA = np.append(RA[0:6],RA[8:len(RA)])
 Dec = np.loadtxt(dir+"P9BlackOnly.txt")[:,1]
@@ -78,35 +116,56 @@ def p9Region():
 def findArea(n):
     #improved but ISSUES EVERYWHERE
     #for certain values of n (ex:10) seems to work, but for others error
-        #"A value in x_new is above the interpolation range"
-    upperDec = Dec[6:18]
-    upperRA = RA[6:18]
-    lowerDec = np.append(Dec[0:6],Dec[17:len(Dec)])
-    lowerRA = np.append(RA[0:6],RA[17:len(RA)])
-    lower_interpolate = interpolate.interp1d(lowerDec, lowerRA, kind='linear')
-    upper_interpolate = interpolate.interp1d(upperDec, upperRA, kind='linear')
+    #"A value in x_new is above the interpolation range"
 
-    np.array(Dec)
+    # These were chosen incorrectly
+    # Additionally, these arrays need to be ordered properly for
+    # the interpolation to work
+    lowerDec = Dec[5:16]
+    lowerRA = RA[5:16]
+    i = np.argsort(lowerDec)
+    lowerDec = lowerDec[i] ; lowerRA = lowerRA[i]
+    
+    upperDec = np.append(Dec[15:],Dec[0:6])
+    upperRA = np.append(RA[15:],RA[0:6])
+    i = np.argsort(upperDec)
+    upperDec = upperDec[i] ; upperRA = upperRA[i]
+
+    lower_interpolate = interp1d(lowerDec, lowerRA, kind='linear')
+    upper_interpolate = interp1d(upperDec, upperRA, kind='linear')
+
     
     #define delta x - constant
-    delta_x = ((Dec[15]-Dec[6])/n)
+    delta_x = (np.max(upperDec)-np.min(upperDec))/n
     # create equally spaced values between low and high point
-    n_Dec = np.linspace(Dec[6],Dec[15],n)
-    #create delx variation for use in loop
+    n_Dec = np.linspace(np.min(upperDec),np.max(upperDec),n)
+
+    # create delx variation for use in loop (midpoint of rectangle)
     del_x2 = delta_x/2
     Area = []
     # height = (upper_interp - lower_interp)
     # width = delta_x * cos(dec)
     # Sum = np.sum(height * width)
-    
-    for i in range(n):
-        width = np.cos(n_Dec) * delta_x        
-        #to correct for upper/lower sum
-        height = upper_interpolate(i+del_x2)-lower_interpolate(i+del_x2)
-        Area = np.append(Area,height*width[i])
+
+    width = delta_x
+
+    # Many little things were wrong here, starting with cosine takes
+    # an argument in radians
+    # Width doesn't change throughout the Riemann Sum
+    # Index must go to n-1, not n, for the way you defined your
+    # rectangles.
+    for i in range(n-1):
+        #width = np.cos(n_Dec[i]) * delta_x        
+        # cos(Dec) correction should be on the height and evaluated
+        # at the midpoint of the rectangles.
+        height = (upper_interpolate(n_Dec[i]+del_x2) - \
+                 lower_interpolate(n_Dec[i]+del_x2)) * \
+                 np.cos(np.radians(n_Dec[i]+del_x2))
+        Area = np.append(Area,height*width)
     TotalArea = np.sum(Area)
 
     return TotalArea
+
     
 def numPoint(n=100):
     area = findArea(n)
