@@ -19,7 +19,7 @@ SNR EQUATION
 
 def plate_scale(mu=13.5,f=6.486,d=0.7):
     """
-    Returns arcseconds per pixel for camera and telescope 
+    Returns arcseconds per pixel for camera and telescope
     specifications
 
     mu = size of a pixel in microns
@@ -43,7 +43,7 @@ ps = plate_scale()
 def npix(fwhm=3.0,ps=ps):
     numpix = np.pi/4.0 * (fwhm/ps)**2
     return numpix
-    
+
 numpix = npix(fwhm=3.0)
 
 
@@ -124,17 +124,20 @@ def findArea(n):
     lowerDec = Dec[5:16]
     lowerRA = RA[5:16]
     i = np.argsort(lowerDec)
+    # N: Why do we need to sort the Dec and why not sorting RA?
     lowerDec = lowerDec[i] ; lowerRA = lowerRA[i]
-    
+    # N: What is going on here?
+
     upperDec = np.append(Dec[15:],Dec[0:6])
     upperRA = np.append(RA[15:],RA[0:6])
     i = np.argsort(upperDec)
     upperDec = upperDec[i] ; upperRA = upperRA[i]
+    # N: Same questions as above
 
     lower_interpolate = interp1d(lowerDec, lowerRA, kind='linear')
     upper_interpolate = interp1d(upperDec, upperRA, kind='linear')
 
-    
+
     #define delta x - constant
     delta_x = (np.max(upperDec)-np.min(upperDec))/n
     # create equally spaced values between low and high point
@@ -154,8 +157,8 @@ def findArea(n):
     # Width doesn't change throughout the Riemann Sum
     # Index must go to n-1, not n, for the way you defined your
     # rectangles.
-    for i in range(n-1):
-        #width = np.cos(n_Dec[i]) * delta_x        
+    for i in range(n-1): # N: Why n-1? and not just n?
+        #width = np.cos(n_Dec[i]) * delta_x
         # cos(Dec) correction should be on the height and evaluated
         # at the midpoint of the rectangles.
         height = (upper_interpolate(n_Dec[i]+del_x2) - \
@@ -166,10 +169,10 @@ def findArea(n):
 
     return TotalArea
 
-    
+
 def numPoint(n=100):
     area = findArea(n)
     field = 0.17
     pointings = area/field
-    
+
     return pointings
