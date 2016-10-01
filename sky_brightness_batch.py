@@ -2,14 +2,14 @@
 #from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 #from astropy import units as u
 #import sys
-import pyfits as pf
-import pytz,datetime,ephem
+import pytz,datetime,ephem,glob
 from astropy import wcs
-from astropy.io.fits import open
+from astropy.io.fits import open, getdata
 import robust as rb
 from djs_photfrac_mb import *
 from scipy.ndimage import gaussian_filter 
 import matplotlib.pyplot as plt
+from length import length
 
 do_smooth = False
 
@@ -20,21 +20,35 @@ deczen = lat
 
 # Create pyephem observatory object 
 thob = ephem.Observer()
-thob.long = ephem.degrees("-119.1773417")
-thob.lat = ephem.degrees("34.467028")
-thob.elevation = 504.4 
+thob.long = ephem.degrees(str(lon))
+thob.lat = ephem.degrees(str(lat))
+thob.elevation = 504.4 # in meters
 
 # Data directory
-dir = '/Users/jonswift/Dropbox (Thacher)/Observatory/AllSkyCam/Data/13April2015/'
-# Image with astrometric solution from astrometry.net
-file = 'Image_15_crop4_astrom.fits'
+dir = '/Users/jonswift/Dropbox (Thacher)/Observatory/AllSkyCam/Data/30Sept2016/'
+darks = glob.glob(dir+'dark*FIT')
 
-rate = 0.1500
-darkrate = 0.0157 # from D. McKenna
-mv = -2.5*np.log10(rate - darkrate)+18.865 # from D. McKenna
+# Get dark frames
+d0 = getdata(darks[0],0,header=False)
+xsz,ysz = np.shape(d0)
+
+# Find a master dark
+dcube = np.empty((xsz,ysz,length(darks)))
+for i in range(length(darks)):
+    dcube[:,:,i] = getdata(darks[i],0,header=False)
+dark = np.median(dcube,axis=2)
+
+    
+# Measured sky brightness 9/30/2016 (hand held)
+mv = 20.8 # Mags per square arcsecond
+
+# Get sky images
+skys = glob.glob(dir+'sky*FIT')
 
 # Get image and header
-image, header = pf.getdata(dir+file, 0, header=True)
+image, header = getdata(skys[2], 0, header=True)
+# Subtract dark current and bias (together)
+image -= dark
 
 # Get image info
 date = header["DATE-OBS"]
@@ -60,7 +74,6 @@ w = wcs.WCS(hdulist['PRIMARY'].header)
 radeg  = np.degrees(ra)
 decdeg = np.degrees(dec)
 xpix,ypix = w.wcs_world2pix(radeg,decdeg,1) # Pixel coordinates of (RA, DEC)
-
 
 
 # Get indices of 5 degree field
@@ -122,7 +135,7 @@ calval = 21.029 - logavg
 fullfile = 'img00015_ds.fit'
 
 # Get image and header
-fullim, fullh = pf.getdata(dir+fullfile, 0, header=True)
+fullim, fullh = getdata(dir+fullfile, 0, header=True)
 
 # Smooth full image
 if do_smooth:
