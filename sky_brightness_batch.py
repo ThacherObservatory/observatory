@@ -52,8 +52,8 @@ image -= dark
 
 # Get image info
 date = header["DATE-OBS"]
-# From observer log (header time is not right)
-time = '00:14:20'
+# From file timestamp
+time = '23:14:00'
 local = pytz.timezone ("America/Los_Angeles")
 naive = datetime.datetime.strptime (date+" "+time, "%Y-%m-%d %H:%M:%S")
 local_dt = local.localize(naive, is_dst=None)
