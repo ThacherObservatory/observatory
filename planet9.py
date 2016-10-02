@@ -125,8 +125,11 @@ def findArea(n):
     lowerRA = RA[5:16]
     i = np.argsort(lowerDec)
     # N: Why do we need to sort the Dec and why not sorting RA?
+    # Dec is the independent variable.
     lowerDec = lowerDec[i] ; lowerRA = lowerRA[i]
     # N: What is going on here?
+    # sorting the dec values so they are monotically increasing. Must also
+    # rearrange the corresponding RA values
 
     upperDec = np.append(Dec[15:],Dec[0:6])
     upperRA = np.append(RA[15:],RA[0:6])
@@ -158,6 +161,8 @@ def findArea(n):
     # Index must go to n-1, not n, for the way you defined your
     # rectangles.
     for i in range(n-1): # N: Why n-1? and not just n?
+        # rectangles can't extend beyond the boundary of the region
+
         #width = np.cos(n_Dec[i]) * delta_x
         # cos(Dec) correction should be on the height and evaluated
         # at the midpoint of the rectangles.
@@ -172,7 +177,7 @@ def findArea(n):
 
 def numPoint(n=100):
     area = findArea(n)
-    field = 0.17
+    field = (20.9/60.0)**2
     pointings = area/field
 
     return pointings
