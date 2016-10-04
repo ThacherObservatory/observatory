@@ -11,7 +11,7 @@ import SNR
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
-user = 'jswift' #'nick' and 'katie' are also defined users
+user = 'nick' #'nick' and 'katie' are also defined users
 
 """
 SNR EQUATION
@@ -98,9 +98,9 @@ def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
 """
 SKY AREA
 """
-RA = np.loadtxt(dir+"P9BlackOnly.txt")[:,0]
+RA = np.loadtxt(dir+"P9_GP_only.txt")[:,0]
 RA = np.append(RA[0:6],RA[8:len(RA)])
-Dec = np.loadtxt(dir+"P9BlackOnly.txt")[:,1]
+Dec = np.loadtxt(dir+"P9_GP_Only.txt")[:,1]
 Dec = np.append(Dec[0:6],Dec[8:len(Dec)])
 
 def p9Region():
