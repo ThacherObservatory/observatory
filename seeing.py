@@ -29,7 +29,6 @@ import time
 from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
-import pdb
 import matplotlib as mpl
 import datetime, glob, math
 from length import length
