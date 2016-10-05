@@ -20,6 +20,7 @@
 #
 # dklink 4/30/2015: Finished get_FWHM_data_range
 #                   Wrote graph_FWHM_data_range
+#
 ######################################################################
 
 import numpy as np
@@ -29,8 +30,8 @@ from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 import matplotlib as mpl
-import datetime
-import glob
+import datetime, glob, math
+from length import length
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -85,8 +86,9 @@ def distparams(dist):
 
 
 
-def get_data(year=2015,month=3,day=6,
-             path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/', filename = ''):
+def get_data(year=2015,month=3,day=6,tenmin=False,
+             path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',
+             filename = ''):
 
     """
     Description:
@@ -105,6 +107,8 @@ def get_data(year=2015,month=3,day=6,
     ------
     Make data reading more robust
 
+    !!! First line of data for FWHMraw has formatting errors
+
     """
 
     # Set up path and filename
@@ -118,10 +122,10 @@ def get_data(year=2015,month=3,day=6,
         file = filename
 
     # Read first section of data (tab delimited and uniform)
-    d1 = np.loadtxt(file, dtype=[('time', '|S8'), ('date', '|S10'), ('Fmin', 'i6'),
-                                 ('Fmax', 'i6'), ('FWHMave', 'f6'), ('npts', 'i2')],
+    d1 = np.loadtxt(file, dtype=[('time', '|S8'), ('date', '|S10'), ('Fmin', np.int),
+                                 ('Fmax', np.int), ('FWHMave', np.float), ('npts', np.int)],
                     usecols=(0,1,2,3,4,5))
-
+    
     # Read in second section of data (; delimited and not uniform)
     d2raw = np.loadtxt(file, delimiter=[0],dtype='str')
     d2 = []
@@ -157,13 +161,25 @@ def get_data(year=2015,month=3,day=6,
         doyv = np.append(doyv,d.timetuple().tm_yday+np.float(hr)/
                          24.0+mn/(24.0*60.0)+sec/(24.0*3600.0))
 
+    d1time = d1['time']; d1date = d1['date']; d1fmin = d1['Fmin']
+    d1fmax = d1['Fmax']; d1fave = d1['FWHMave']; d1npts = d1['npts']
+    
+    if tenmin and year <= 2015 and month <= 4:
+        dt = dt[::10]
+        doyv = doyv[::10]
+        time24v = time24v[::10]
+        d1time = d1time[::10]
+        d1date = d1date[::10]
+        d1fmin = d1fmin[::10]
+        d1fmax = d1fmax[::10]
+        d1fave = d1fave[::10]
+        d1npts = d1npts[::10]
+        d2 = d2[::10]
         
     # Put all data together into a dictionary
     data = {"datetime": dt, "doy": doyv, "timefloat": time24v,
-            "time": d1["time"], "date": d1["date"],
-            "Fmin": d1["Fmin"], "Fmax": d1["Fmax"],
-            "FWHMave": d1["FWHMave"], "npts": d1["npts"],
-            "FWHMraw": d2}
+            "time": d1time, "date": d1date,"Fmin": d1fmin, "Fmax": d1fmax,
+            "FWHMave": d1fave, "npts": d1npts,"FWHMraw": d2}
 
     return data
 
@@ -174,7 +190,6 @@ def FWHM_all(data):
     ------------
     Extract a numpy array of all FWHM measurements vetted against zeros and 0.08 values
     which seem to be a saturation effect
-
     """
 
     raw = data["FWHMraw"]
@@ -290,6 +305,13 @@ def vet_FWHM_series(time,raw):
     for r in raw:
         new = np.append(new,round(r,2))
 
+    for t in time:
+        newt = np.append(newt,t)
+
+    if length(newt) != length(new):
+        print 'Time and data vectors not equal lengths!'
+        return None,None
+
     inds, = np.where(new == '')
 
     if inds:
@@ -297,46 +319,51 @@ def vet_FWHM_series(time,raw):
 
     keep1, = np.where(new != 0.0)
     new = new[keep1]
-    newt = time[keep1]
+    newt = newt[keep1]
 
     keep2, = np.where(new != 0.08)
     new = new[keep2]
-    newt = time[keep2]
+    newt = newt[keep2]
     
     keep3, = np.where(new < 10)
     new = new[keep3]
-    newt = time[keep3]
+    newt = newt[keep3]
     
     FWHM = new.astype('float')
 
     return newt, FWHM
 
-def fwhm_hist(vec):
+
+
+def fwhm_hist(vec,bins=50):
 
     plot_params()
     plt.ion()
     plt.figure(33)
+    plt.clf()
     maxval = np.max(vec)
     minval = np.min(vec)
     std = np.std(vec)
     med = np.median(vec)
 
     vec = vec[vec < 5*std+med]
-    plt.hist(vec,bins=100)
+    plt.hist(vec,bins=bins)
     plt.xlabel('FWHM (arcsec)',fontsize=fs)
     plt.ylabel('Frequency',fontsize=fs)
 
     mpl.rcdefaults()
     return
 
-def FWHM_day_graph(year=2015, month=3, day=15):
+
+def FWHM_day_graph(year=2015, month=3, day=15,
+                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
     """
     Description:
     ------------
     Get FWHM data from the given day, vet it, and then display it in a histogram.
     """
     
-    data = get_data(year, month, day) #assumes default path is correct
+    data = get_data(year, month, day,path=path) #assumes default path is correct
     FWHM_data = FWHM_ave(data)
     time = data['timefloat']
     
@@ -351,8 +378,9 @@ def FWHM_day_graph(year=2015, month=3, day=15):
     return
 
 def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
-                   end_date=datetime.datetime(2015,4,15),
+                        end_date=datetime.datetime(2015,4,15),tenmin=True,
                    path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/'):
+
     files = glob.glob(path+'seeing_log*.log')
 
     keepfiles = []
@@ -369,23 +397,73 @@ def get_FWHM_data_range(start_date=datetime.datetime(2015,3,1),
     all_FWHM_data = []
     
     for fname in keepfiles:
-        temp_data = get_data(filename=fname)
+        temp_data = get_data(filename=fname,tenmin=tenmin)
         FWHM_data = FWHM_ave(temp_data)
         time = temp_data['timefloat']
         
         vetted_data = vet_FWHM_series(time,FWHM_data)[1]
         all_FWHM_data.extend(vetted_data)
-    
+            
     return all_FWHM_data
-    
+
+
 def graph_FWHM_data_range(start_date=datetime.datetime(2015,3,6),
-                   end_date=datetime.datetime(2015,4,15),
-                   path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',bins=50):
+                          end_date=datetime.datetime(2015,4,15),tenmin=True,
+                          path='/home/douglas/Dropbox (Thacher)/Observatory/Seeing/Data/',
+                          write=True,outpath='./'):
     
     
-    data = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path)
+    plot_params()
+    fwhm = get_FWHM_data_range(start_date = start_date, end_date=end_date, path=path, tenmin=tenmin)
+
+    # Basic stats
+    med = np.median(fwhm)
+    mean = np.mean(fwhm)
+    fwhm_clip, low, high = sigmaclip(fwhm,low=3,high=3)
+    meanclip = np.mean(fwhm_clip)
+
+    # Get mode using kernel density estimation (KDE)
+    vals = np.linspace(0,30,1000)
+    fkde = gaussian_kde(fwhm)
+    fpdf = fkde(vals)
+    mode = vals[np.argmax(fpdf)]
+    std = np.std(fwhm)
+
+
     plt.ion()
+    plt.figure(99)
     plt.clf()
-    plt.hist(data, bins=bins)
+    plt.hist(fwhm, color='darkgoldenrod',bins=35)
+    plt.xlabel('FWHM (arcsec)',fontsize=16)
+    plt.ylabel('Frequency',fontsize=16)
+    plt.annotate('mode $=$ %.2f" ' % mode, [0.87,0.85],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    plt.annotate('median $=$ %.2f" ' % med, [0.87,0.8],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    plt.annotate('mean $=$ %.2f" ' % mean, [0.87,0.75],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+
+    xvals = np.linspace(0,30,1000)
+    kde = gaussian_kde(fwhm)
+    pdf = kde(xvals)
+    dist_c = np.cumsum(pdf)/np.sum(pdf)
+    func = interp1d(dist_c,vals,kind='linear')
+    lo = np.float(func(math.erfc(1./np.sqrt(2))))
+    hi = np.float(func(math.erf(1./np.sqrt(2))))
+
+    disthi = np.linspace(.684,.999,100)
+    distlo = disthi-0.6827
+    disthis = func(disthi)
+    distlos = func(distlo)
+
+    interval = np.min(disthis-distlos)
+
+    plt.annotate('1 $\sigma$ int. $=$ %.2f" ' % interval, [0.87,0.70],horizontalalignment='right',
+                 xycoords='figure fraction',fontsize='large')
+    
+    
     plt.rcdefaults()
+
+    plt.savefig(outpath+'Seeing_Cumulative.png',dpi=300)
+
     return

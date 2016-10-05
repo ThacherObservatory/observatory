@@ -18,6 +18,7 @@ from scipy.stats import sigmaclip
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 import matplotlib as mpl
+import pandas as pd
 
 def plot_params(fontsize=16,linewidth=1.5):
     """
@@ -83,12 +84,11 @@ def get_day_data(year=2015,month=10,day=1,
 
     Example:
     --------
-    data = get_data(year=2015,month=3,day=6)
+    data = get_day_data(year=2015,month=3,day=6)
 
 
     To do:
     ------
-    Make data reading more robust
 
     """
 
@@ -101,89 +101,105 @@ def get_day_data(year=2015,month=10,day=1,
         print 'File '+file+' not found in directory'
         print '     '+path
         return []
-    
-    # Read data line by line
-    f = open(filename)
-    content = [x.strip('\n').strip('\r') for x in f.readlines()]
-    date = []; time = []; hval = [] ; Dval = [] ;Eval = [] ;Cval = [] ;Wval = []
-    Rval = [] ;oneval = [] ;cval = []; SKY = []; AMB = []; WIND = []; wval = []
-    rval = []; HUM = [] ;DEW = [] ;CASE = [] ; HEA = []; BLKT = []; Hval = []; PWR = []
-    WNDTD = []; WDROP = []; WAVG = []; WDRY = []; RHT = []; AHT = []; ASKY = []
-    ACSE = []; APSV = []; ABLK = []; AWND = []; AVNE = [] ; DKMPH = [] ; VNE = []
-    RWOSC = []; D = []; ADAY = []; PH = [] ; CN = []; T = []; S = []
-    f.close()
-    
-    counter = 0
-    for c in content:
-        if c[26:28] == '~D':
-            counter += 1
-            date.append(c[0:10])
-            time.append(c[11:22])
-            hval.append(c[23])
-            Dval.append(c[26:28])
-            Eval.append(c[29])
-            Cval.append(c[31])
-            Wval.append(c[33])
-            Rval.append(c[35])
-            oneval.append(c[37])
-            cval.append(c[39])
-            SKY = np.append(SKY,np.float(c[41:47]))
-            AMB = np.append(AMB,np.float(c[48:53]))
-            WIND = np.append(WIND,np.float(c[54:59]))
-            wval.append(c[60])
-            rval.append(c[62])
-            HUM = np.append(HUM,np.float(c[64:67]))
-            DEW = np.append(DEW,np.float(c[68:73]))
-            CASE = np.append(CASE,np.float(c[74:79]))
-            HEA = np.append(HEA,np.float(c[80:83]))
-            BLKT = np.append(BLKT,np.float(c[84:89]))
-            Hval.append(c[90])
-            PWR = np.append(PWR,np.float(c[92:96]))
-            WNDTD = np.append(WNDTD,np.float(c[97:102]))
-            if counter > 1:
-                ADAY = np.append(ADAY,np.float(c[176:181]))
-            else:
-                ADAY = np.append(ADAY,np.nan)
-        else:
-            counter = 0
 
-    pdb.set_trace()
+    colspec = [(0,10),(11,22),(23,24),(26,28),(29,30),(31,32),(33,34),(35,36),(37,38),(39,40),
+               (42,47),(49,53),(55,59),(60,61),(62,63),(64,67),(69,73),(74,79),(80,83),
+               (84,89),(90,91),(92,96),(97,102),(103,108),(109,114),(115,120),(169,174),
+               (175,176),(177,181)]
+    names =   ['Date','Time','M','RecordType','Error','CloudVal','WindVal','RainVal','SkyVal','Roof',
+               'SkyTemp','AmbientTemp','Wind','Wet','Rain','Humidity','DewPoint','CaseTemp','Heater',
+               'BLKT','H','Voltage','TipTemp','WetDrop','WetAvg','WetDry','RawWetCt',
+               'DayFlag','Daylight']
+    data = pd.read_fwf(filename,colspecs=colspec,names=names)
 
-    # create null vectors of interest
-    yearv = [] ; monthv = [] ; dayv = [] ; doyv = [] ; time24v = [] ; dt =[]
+    data = data[data['RecordType'] == '~D']
+    fmt = '%Y-%m-%d %H:%M:%S.%f'
+    datetimestr = data['Date']+' '+data['Time']
+    dtv = []
+    doyv = []
+    print '... converting times into datetime objects'
+    for date in datetimestr:
+        if np.int(date[17:19]) == 60:
+            date = date[:17]+'00'+date[19:]
+            min = np.int(date[14:16])
+            min += 1
+            date = date[:14]+str(min)+date[16:]
 
-    # parse data
-    
-    date = d1['date']
-    time = d1['time']
-    
-    for i in range(len(date)):
-        yr = np.int(date[i].split('/')[2])
-        yearv = np.append(yearv,yr)
+        dt = datetime.datetime.strptime(date,fmt)
+        dtv =  np.append(dtv,dt)
+        doyv = np.append(doyv,dt.timetuple().tm_yday+np.float(dt.hour)/
+                         24.0+dt.minute/(24.0*60.0)+dt.second/(24.0*3600.0)+
+                         dt.microsecond/(24.0*3600.0*1e6))
 
-        month = np.int(date[i].split('/')[0])
-        monthv = np.append(monthv,month)
-        
-        day = np.int(date[i].split('/')[1])
-        dayv = np.append(dayv,day)
-        
-        hr  = np.int(time[i].split(':')[0])
-        mn  = np.int(time[i].split(':')[1])
-        sec = np.int(time[i].split(':')[2])
-
-        time24v = np.append(time24v,hr+mn/60.0+sec/3600.0)
-
-        d = datetime.datetime(yr,month,day,hr,mn,sec,0)
-        dt = np.append(dt,d)
-        doyv = np.append(doyv,d.timetuple().tm_yday+np.float(hr)/
-                         24.0+mn/(24.0*60.0)+sec/(24.0*3600.0))
-
-        
-    # Put all data together into a dictionary
-    data = {"datetime": dt, "doy": doyv, "timefloat": time24v,
-            "time": d1["time"], "date": d1["date"],
-            "Fmin": d1["Fmin"], "Fmax": d1["Fmax"],
-            "FWHMave": d1["FWHMave"], "npts": d1["npts"],
-            "FWHMraw": d2}
+    data['datetime'] = dtv
+    data['DOY'] = doyv
 
     return data
+
+
+
+
+
+def get_longterm_data(path='/Users/jonswift/Dropbox (Thacher)/Observatory/CloudSensor/Data/'):
+
+    """
+    Description:
+    ------------
+    Fetch long term log data from the cloud sensor
+    
+
+    Example:
+    --------
+    data = get_longterm_data(path='./')
+
+
+    To do:
+    ------
+
+
+    """
+
+    # Set up path and filename
+    file = 'longtermlog.txt'
+    filename = path+file
+
+    test = glob.glob(filename)
+    if len(test) == 0:
+        print 'File '+file+' not found in directory'
+        print '     '+path
+        return []
+
+    colspec = [(0,10),(11,22),(23,24),(26,28),(29,30),(31,32),(33,34),(35,36),(37,38),(39,40),
+               (42,47),(49,53),(55,59),(60,61),(62,63),(64,67),(69,73),(74,79),(80,83),
+               (84,89),(90,91),(92,96),(97,102),(103,108),(109,114),(115,120),(169,174),
+               (175,176),(177,181)]
+    names =   ['Date','Time','M','RecordType','Error','CloudVal','WindVal','RainVal','SkyVal','Roof',
+               'SkyTemp','AmbientTemp','Wind','Wet','Rain','Humidity','DewPoint','CaseTemp','Heater',
+               'BLKT','H','Voltage','TipTemp','WetDrop','WetAvg','WetDry','RawWetCt',
+               'DayFlag','Daylight']
+    data = pd.read_fwf(filename,colspecs=colspec,names=names)
+
+    data = data[data['RecordType'] == '~D']
+    fmt = '%Y-%m-%d %H:%M:%S.%f'
+    datetimestr = data['Date']+' '+data['Time']
+    dtv = []
+    doyv = []
+    print '... converting times into datetime objects'
+    for date in datetimestr:
+        if np.int(date[17:19]) == 60:
+            date = date[:17]+'00'+date[19:]
+            min = np.int(date[14:16])
+            min += 1
+            date = date[:14]+str(min)+date[16:]
+
+        dt = datetime.datetime.strptime(date,fmt)
+        dtv =  np.append(dtv,dt)
+        doyv = np.append(doyv,dt.timetuple().tm_yday+np.float(dt.hour)/
+                         24.0+dt.minute/(24.0*60.0)+dt.second/(24.0*3600.0)+
+                         dt.microsecond/(24.0*3600.0*1e6))
+
+    data['datetime'] = dtv
+    data['DOY'] = doyv
+
+    return data
+
