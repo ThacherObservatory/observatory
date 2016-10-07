@@ -10,34 +10,52 @@ from astropy.io import fits
 import glob
 import matplotlib.mlab as mlab
 
-def makeGaussian(fwhm = 20., center=None, dir="/Users/george/Dropbox/Astronomy/AllSky Cam/30Sept2016/",filename="sky1.FIT"):
-    """ Make a square gaussian kernel.
-
-    size is the length of a side of the square
-    fwhm is full-width-half-maximum, which
-    can be thought of as an effective radius.
+def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbox/Astronomy/AllSky Cam/30Sept2016/", filename="sky1.FIT"):
     """
-    testimage = glob.glob(dir+filename)
-    hdu = fits.open(testimage[0])[0]
+    fwhm: full with half max
+    arcppx: sqarcsec per pixel
+    center: if gaussian to be centered around certain points, say so in tuple/list
+    dir: directory of image
+    filename: name of image
+
+    Takes image, makes a 2D gaussian of selected portion of sky
+    """
+    #Calculates sigma and the number of pixels wide the circle will be
+    sig = fwhm/(2*np.sqrt(2*np.log(2)))
+    pxnum = (fwhm*3600)/arcppx
+    #Creates two arrays: array of image and array of zeros w/ same dimensions
+    hdu = fits.open(dir+filename)[0]
     xd = hdu.header['NAXIS1']
-    size = (fwhm/180.)*xd
-
-    x = np.arange(1, size, 1, float)
-    y = x[:,np.newaxis]
-    print x, y
-
-    if center is None:
-        x0 = y0 = size // 2
+    yd = hdu.header['NAXIS2']
+    img = fits.getdata(dir+filename)
+    imgaus = np.zeros((yd, xd))
+    #Creates variables for x and y centers
+    if center:
+        ycent = center[1]
+        xcent = center[0]
     else:
-        x0 = center[0]
-        y0 = center[1]
-
-    gaus = np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
-    std = np.std(gaus)
-    med = np.median(gaus)
-    mean = np.mean(gaus)
-
-    plt.figure(1)
-    plt.plot(gaus,mlab.normpdf(gaus, np.mean(gaus), std))
+        ycent = yd//2
+        xcent = xd//2
+    #Add the pixels for the gaussian to the zeros array
+    xadd = xcent-pxnum//2
+    yadd = ycent-pxnum//2
+    imgaus[yadd:yadd+pxnum,xadd:xadd+pxnum] = img[yadd:yadd+pxnum,xadd:xadd+pxnum]
+    mean = np.mean(imgaus[yadd:yadd+pxnum,xadd:xadd+pxnum])
+    #Make gaussian data set of it and plot
+    gaus = gausFunc(imgaus,sig,mean)
+    plt.plot(gaus,mlab.normpdf(gaus,mean,sig))
     plt.show()
-    return gaus
+    return mean
+"""
+plt.plot(x,mlab.normpdf(x, mu, sigma))
+"""
+
+def gausFunc(imgaus, sigma, x0):
+    """
+    Actual 1D gaussian function
+    """
+    for line in np.nditer(imgaus,op_flags=['readwrite']):
+        for px in np.nditer(line,op_flags=['readwrite']):
+            if int(px) != 0:
+                px = (1.0/(np.sqrt(2.0*np.pi)*sigma))*(np.e**((-1*(px-x0)**2)/(2*sigma**2)))
+    return imgaus
