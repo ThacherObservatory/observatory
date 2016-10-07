@@ -11,9 +11,9 @@ import glob
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 
-def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbox/Astronomy/AllSky Cam/30Sept2016/", filename="sky1.FIT"):
+def makeGaussian(deg=20.,arcppx=383.65, center=None, dir="/Users/george/Dropbox/Astronomy/AllSky Cam/30Sept2016/", filename="sky1.FIT"):
     """
-    fwhm: full with half max
+    fwhm: full width half max
     arcppx: sqarcsec per pixel
     center: if gaussian to be centered around certain points, say so in tuple/list
     dir: directory of image
@@ -22,8 +22,8 @@ def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbo
     Takes image, makes a 2D gaussian of selected portion of sky
     """
     #Calculates sigma and the number of pixels wide the circle will be
+    fwhm = (deg*3600)/arcppx
     sig = fwhm/(2*np.sqrt(2*np.log(2)))
-    pxnum = (fwhm*3600)/arcppx
     #Creates two arrays: array of image and array of zeros w/ same dimensions
     hdu = fits.open(dir+filename)[0]
     xd = hdu.header['NAXIS1']
@@ -37,29 +37,21 @@ def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbo
     else:
         ycent = yd//2
         xcent = xd//2
-    #Add the pixels for the gaussian to the zeros array
-    xadd = xcent-pxnum//2
-    yadd = ycent-pxnum//2
-    imgaus[yadd:yadd+pxnum,xadd:xadd+pxnum] = img[yadd:yadd+pxnum,xadd:xadd+pxnum]
-    mean = np.mean(imgaus[yadd:yadd+pxnum,xadd:xadd+pxnum])
-    #Make gaussian data set of it and plot
-    gaus = gausFunc(imgaus,sig,mean)
-    plt.plot(gaus[yadd:yadd+pxnum,xadd:xadd+pxnum],mlab.normpdf(gaus[yadd:yadd+pxnum,xadd:xadd+pxnum],mean,sig))
-    plt.axis([2000,5000,0,.05])
+    # domain and range of values you want selected out of table for gaussian
+    xmin = xcent-fwhm//2
+    xmax = xcent+fwhm//2
+    ymin = ycent-fwhm//2
+    ymax = ycent+fwhm//2
+    # Add all datapoints that you want from image to gaussian zeros array, run thru a gaussian function to make data set of gaussian values
+    mean = np.mean(img[ymin:ymax,xmin:xmax])
+    imgaus[ymin:ymax,xmin:xmax] = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.e**((-1*(img[ymin:ymax,xmin:xmax]-mean)**2)/(2*sig**2)))
+    # plot gaussian distribution of points from original image (norm.pdf normalizes points for you, sig calculated earlier relative to fwhm)
+    mean = np.mean(img[ymin:ymax,xmin:xmax])
+    plt.clf()
+    plt.figure(1)
+    plt.plot(img[ymin:ymax,xmin:xmax],norm.pdf(img[ymin:ymax,xmin:xmax],mean,sig))
     plt.show()
-    #print np.max(gaus)
     """
-    comb outliers
+    comb outliers?
     """
-    return mean
-
-
-def gausFunc(imgaus, sigma, x0):
-    """
-    Actual 1D gaussian function
-    """
-    for line in np.nditer(imgaus,op_flags=['readwrite']):
-        for px in np.nditer(line,op_flags=['readwrite']):
-            if int(px) != 0:
-                px = (1.0/(np.sqrt(2.0*np.pi)*sigma))*(np.e**((-1*(px-x0)**2)/(2*sigma**2)))
-    return imgaus
+    return imgaus[ymin:ymax, xmin:xmax]
