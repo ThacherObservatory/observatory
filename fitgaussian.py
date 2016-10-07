@@ -2,13 +2,14 @@
 """
 Created on Wed Oct  5 20:57:09 2016
 
-@author: gorge
+@author: görg
 """
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 import glob
 import matplotlib.mlab as mlab
+from scipy.stats import norm
 
 def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbox/Astronomy/AllSky Cam/30Sept2016/", filename="sky1.FIT"):
     """
@@ -43,12 +44,15 @@ def makeGaussian(fwhm=20., arcppx=383.65, center=None, dir="/Users/george/Dropbo
     mean = np.mean(imgaus[yadd:yadd+pxnum,xadd:xadd+pxnum])
     #Make gaussian data set of it and plot
     gaus = gausFunc(imgaus,sig,mean)
-    plt.plot(gaus,mlab.normpdf(gaus,mean,sig))
+    plt.plot(gaus[yadd:yadd+pxnum,xadd:xadd+pxnum],mlab.normpdf(gaus[yadd:yadd+pxnum,xadd:xadd+pxnum],mean,sig))
+    plt.axis([2000,5000,0,.05])
     plt.show()
+    #print np.max(gaus)
+    """
+    comb outliers
+    """
     return mean
-"""
-plt.plot(x,mlab.normpdf(x, mu, sigma))
-"""
+
 
 def gausFunc(imgaus, sigma, x0):
     """
