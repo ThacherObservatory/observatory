@@ -46,12 +46,23 @@ def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30
     #Z = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.exp(-((X-x0)**2+(Y-y0)**2)/(2.0*sig**2))
     Z = np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
    
+    plt.ion()
     plt.clf()
-    #plt.figure(99,figsize=(15,8))
+    plt.figure(99,figsize=(15,8))
     plt.imshow(Z,cmap='pink',interpolation='nearest',origin='upper')
     #fig = plt.figure()
     #ax=fig.add_subplot(111,projection='3d')
     #ax.plot_surface(x,y,Z,)
-    plt.show()
-    print Z
-    return 
+    plt.colorbar()
+    plt.show() 
+    return Z
+    
+def weightedMean(dir="/Users/sara/python/30Sept2016/", filename="sky1.FIT"):
+    N = fits.getdata(dir+filename)[0]
+    W = makeGaussian()
+    
+    mean = mean = np.sum(N)/np.float(len(N))
+    wmean = np.sum(N*W)/np.sum(W)
+    
+    return wmean
+    
