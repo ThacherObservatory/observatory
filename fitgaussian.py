@@ -2,7 +2,7 @@
 """
 Created on Wed Oct  5 20:57:09 2016
 
-@author: görg
+@author: görg,syao,astrolub
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,57 +31,27 @@ def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30
     img = fits.getdata(dir+filename)
     imgaus = np.zeros((yd, xd))
     #Creates variables for x and y
+    
+    x = np.arange(0, xd, 1, float)
+    y = np.arange(0, yd, 1, float)
+    y = y[:,np.newaxis]
 
     if center:
-        ycent = center[1]
-        xcent = center[0]
+        y0 = center[1]
+        x0 = center[0]
     else:
-        ycent = yd//2
-        xcent = xd//2
-            
-    #Make circle range to extract circular section of datapoints from main img (rad = fwhm/2 b/c fwhm = width of portion, rad = 1/2width)
-    rad = fwhm/2
-        #np.ogrid returns np array of yvalues going down indexed at [0] ([0][1][2]...), xvalues grid indexed at [1] ([0,1,2,3...])
-    y,x = np.ogrid[ :yd, :xd]
-    circ = (x-xcent)**2 + (y-ycent)**2 <= rad*rad
-    # Add all datapoints that you want from image to gaussian zeros array, run thru a gaussian function to make data set of gaussian values
-    mean = np.mean(img[circ])
-    imgaus[circ] = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.e**((-1*(img[circ]-mean)**2)/(2*sig**2)))
-    # plot gaussian distribution of points from original image (norm.pdf normalizes points for you, sig calculated earlier relative to fwhm)    
-    arrayx = np.argwhere(circ!=False)
-    arrayy = []
-    arrayz = []
-    cy = []
-    cz = []
-    
-    for j,ys in enumerate(arrayx):
-        cy.append(ys[0])
-        cy.append(imgaus[circ][j])
-        arrayy.append(cy)
-        cz.append(ys[1])
-        cz.append(imgaus[circ][j])
-        arrayz.append(cz)
-        
+        y0 = yd//2
+        x0 = xd//2
+    #[X,Y] = np.meshgrid(x,y)        
+    #Z = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.exp(-((X-x0)**2+(Y-y0)**2)/(2.0*sig**2))
+    Z = np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
+   
     plt.clf()
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(arrayx, arrayy, arrayz) #img[circ],norm.pdf(img[circ],mean,sig))
+    #plt.figure(99,figsize=(15,8))
+    plt.imshow(Z,cmap='pink',interpolation='nearest',origin='upper')
+    #fig = plt.figure()
+    #ax=fig.add_subplot(111,projection='3d')
+    #ax.plot_surface(x,y,Z,)
     plt.show()
-    
-    return arrayx
-
-  """  
-    for i,row in enumerate(circ):
-        for j, pixel in enumerate(row):
-            if pixel != False:
-                cx.append(i)
-                cx.append(j)
-                arrayx.append(cx)
-                cy.append(i)
-                index = imgaus[circ].index([i,j])
-                cy.append(imgaus[circ][index])
-                arrayy.append(cy)
-                cz.append(j)
-                cz.append(imgaus[circ][index])
-                arrayz.append(cz)
-    """
+    print Z
+    return 
