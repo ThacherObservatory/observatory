@@ -11,7 +11,7 @@ import glob
 from scipy.stats import norm
 from mpl_toolkits.mplot3d import Axes3D
 
-def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30Sept2016/", filename="sky1.FIT"):
+def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/george/Dropbox/Astronomy/Oculus/Bias/", filename="IMG00006.FIT"):
     """
     fwhm: full width half max
     arcppx: sqarcsec per pixel
@@ -28,10 +28,7 @@ def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30
     hdu = fits.open(dir+filename)[0]
     xd = hdu.header['NAXIS1']
     yd = hdu.header['NAXIS2']
-    img = fits.getdata(dir+filename)
-    imgaus = np.zeros((yd, xd))
-    #Creates variables for x and y
-    
+
     x = np.arange(0, xd, 1, float)
     y = np.arange(0, yd, 1, float)
     y = y[:,np.newaxis]
@@ -42,27 +39,21 @@ def makeGaussian(fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30
     else:
         y0 = yd//2
         x0 = xd//2
-    #[X,Y] = np.meshgrid(x,y)        
-    #Z = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.exp(-((X-x0)**2+(Y-y0)**2)/(2.0*sig**2))
-    Z = np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
-   
+    #[X,Y] = np.meshgrid(x,y)
+    Z = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / (2.0*sig**2)))
+
+    imgZ = 2.5*np.log(Z)
+
     plt.ion()
     plt.clf()
-    plt.figure(99,figsize=(15,8))
+    plt.figure(1,figsize=(15,8))
     plt.imshow(Z,cmap='pink',interpolation='nearest',origin='upper')
-    #fig = plt.figure()
-    #ax=fig.add_subplot(111,projection='3d')
-    #ax.plot_surface(x,y,Z,)
     plt.colorbar()
-    plt.show() 
-    return Z
-    
-def weightedMean(dir="/Users/sara/python/30Sept2016/", filename="sky1.FIT"):
-    N = fits.getdata(dir+filename)[0]
-    W = makeGaussian()
-    
-    mean = mean = np.sum(N)/np.float(len(N))
+    plt.show()
+
+    N = 2.5*np.log(fits.getdata(dir+filename)[0])
+    W = imgZ
+
     wmean = np.sum(N*W)/np.sum(W)
-    
+
     return wmean
-    
