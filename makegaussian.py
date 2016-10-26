@@ -11,7 +11,7 @@ import glob
 from scipy.stats import norm
 from mpl_toolkits.mplot3d import Axes3D
 
-def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,siglo=4.5, sighi=.5, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
+def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,siglo=5, sighi=.25, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
