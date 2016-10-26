@@ -11,14 +11,13 @@ import glob
 from scipy.stats import norm
 from mpl_toolkits.mplot3d import Axes3D
 
-def makeGaussian(m0, fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30Sept2016/", filename="sky1.FIT"):
+def makeGaussian(m0, fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
     arcppx: sqarcsec per pixel
     center: if gaussian to be centered around certain points, say so in tuple/list
-    dir: directory of image
-    filename: name of image
+    dir: directory of image and image
 
     Takes image, makes a 2D gaussian of selected portion of sky
     """
@@ -26,7 +25,7 @@ def makeGaussian(m0, fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/pytho
     fwhm *= 3600/arcppx
     sig = fwhm/(2*np.sqrt(2*np.log(2)))
     #Creates two arrays: array of image and array of zeros w/ same dimensions
-    hdu = fits.open(dir+filename)[0]
+    hdu = fits.open(dir)[0]
     xd = hdu.header['NAXIS1']
     yd = hdu.header['NAXIS2']
     #Creates variables for x and y
@@ -43,7 +42,7 @@ def makeGaussian(m0, fwhm=20.,arcppx=383.65, center=None, dir="/Users/sara/pytho
     # Gaussian
     Z = (1.0/(np.sqrt(2.0*np.pi)*sig))*(np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / (2.0*sig**2)))
     # image
-    N = fits.getdata(dir+filename)
+    N = fits.getdata(dir)
     # Weighted Mean
     wmean = np.sum(N*Z)/np.sum(Z)
     # Image in magnitudes
