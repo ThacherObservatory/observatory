@@ -9,7 +9,6 @@ import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-
 def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
     """
     m0: reading from photometer
