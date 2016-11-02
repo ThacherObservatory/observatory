@@ -49,11 +49,21 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
     img_mag = m0 - 2.5*np.log(N/wmean)
     # Plot image
     if plot:
+        plt.clf()
+        ycirc, xcirc = np.ogrid[:yd, :xd]
+        xcent = 1100
+        ycent = 500
+        r = 50
+        circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
+        img_mag[circ] = 0
         plt.ion()
         plt.figure(1)
         plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
         plt.colorbar()
         plt.title("Sky brightness")
+        plt.scatter(xd/2,yd/2,s=30)
+        plt.scatter(xcent,ycent,s=30)
+        plt.plot([xd/2,xcent],[yd/2,ycent],linewidth=1)
         plt.show()
     return img_mag
 """
