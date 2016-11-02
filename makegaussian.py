@@ -9,7 +9,7 @@ import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
+def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -43,17 +43,23 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
     N = fits.getdata(dir)
     # Weighted Mean
     wmean = np.sum(N*Z)/np.sum(Z)
+   
+    #George's Circle!
+    ycirc, xcirc = np.ogrid[:yd, :xd]
+    xcent = 750
+    ycent = 900-65
+    r = 50
+    circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
+    mean = np.mean(N[circ])
+    std = np.std(N[circ])
+    median = np.median(N[circ])
+    
     # Image in magnitudes
     img_mag = m0 - 2.5*np.log(N/wmean)
     # Plot image
     if plot:
         plt.clf()
-        ycirc, xcirc = np.ogrid[:yd, :xd]
-        xcent = 1100
-        ycent = 500
-        r = 50
-        circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
-        img_mag[circ] = 0
+ 
         plt.ion()
         plt.figure(1)
         plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
@@ -67,7 +73,7 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(cax=cax)
         plt.show()
-    return img_mag
+    return mean, std, median
 """
 m-m0 = -2.5log(F/F0)
 m0 = 20.78
