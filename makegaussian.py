@@ -7,9 +7,7 @@ Created on Wed Oct  5 20:57:09 2016
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
-import glob
-from scipy.stats import norm
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
     """
@@ -59,11 +57,15 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
         plt.ion()
         plt.figure(1)
         plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
-        plt.colorbar()
         plt.title("Sky brightness")
-        plt.scatter(xd/2,yd/2,s=30)
-        plt.scatter(xcent,ycent,s=30)
-        plt.plot([xd/2,xcent],[yd/2,ycent],linewidth=1)
+        #plt.scatter(xd/2,yd/2,s=30)
+        #plt.scatter(xcent,ycent,s=30)
+        #plt.plot([xd/2,xcent],[yd/2,ycent],linewidth=1)
+        plt.axis('off')
+        ax = plt.gca()
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(cax=cax)
         plt.show()
     return img_mag
 """
