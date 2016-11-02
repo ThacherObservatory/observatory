@@ -11,7 +11,8 @@ import glob
 from scipy.stats import norm
 from mpl_toolkits.mplot3d import Axes3D
 
-def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,siglo=5, sighi=.25, dir="/Users/sara/python/25Oct2016/IMG00069.FIT"):
+
+def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/30Sept2016/sky1.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -49,16 +50,21 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,siglo=5, sigh
     img_mag = m0 - 2.5*np.log(N/wmean)
     # Plot image
     if plot:
-        sig = np.std(img_mag)
-        med = np.median(img_mag)
-        vmin = med - siglo*sig
-        vmax = med + sighi*sig
-
+        plt.clf()
+        ycirc, xcirc = np.ogrid[:yd, :xd]
+        xcent = 1100
+        ycent = 500
+        r = 50
+        circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
+        img_mag[circ] = 0
         plt.ion()
         plt.figure(1)
         plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
         plt.colorbar()
         plt.title("Sky brightness")
+        plt.scatter(xd/2,yd/2,s=30)
+        plt.scatter(xcent,ycent,s=30)
+        plt.plot([xd/2,xcent],[yd/2,ycent],linewidth=1)
         plt.show()
     return img_mag
 """
