@@ -43,23 +43,24 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
     N = fits.getdata(dir)
     # Weighted Mean
     wmean = np.sum(N*Z)/np.sum(Z)
-   
+
     #George's Circle!
     ycirc, xcirc = np.ogrid[:yd, :xd]
     xcent = 750
     ycent = 900-65
+    #Sulfur Mt. Centers
+    #x:1100, y:500 for Thach Obs
     r = 50
     circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
     mean = np.mean(N[circ])
     std = np.std(N[circ])
     median = np.median(N[circ])
-    
+
     # Image in magnitudes
     img_mag = m0 - 2.5*np.log(N/wmean)
     # Plot image
     if plot:
         plt.clf()
- 
         plt.ion()
         plt.figure(1)
         plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
