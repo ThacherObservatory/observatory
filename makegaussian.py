@@ -1,15 +1,17 @@
-# -*- coding: utf-8 -*-
+
 """
+
 Created on Wed Oct  5 20:57:09 2016
 
-@author: görg,syao,astrolub
+@author: gorg,syao,astrolub
+
 """
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -21,7 +23,7 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
     """
     #Calculates sigma and the number of pixels wide the circle will be
     fwhm *= 3600/arcppx
-    sig = fwhm/(2*np.sqrt(2*np.log(2)))
+    sig = fwhm/(2*np.sqrt(2*np.log10(2)))
     #Creates two arrays: array of image and array of zeros w/ same dimensions
     hdu = fits.open(dir)[0]
     xd = hdu.header['NAXIS1']
@@ -48,23 +50,30 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
     ycirc, xcirc = np.ogrid[:yd, :xd]
     xcent = 750
     ycent = 900-65
-    #Sulfur Mt. Centers
+    #Sulfur Mt. Centers x:750 y:900-65
     #x:1100, y:500 for Thach Obs
     r = 50
     circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
+    plot_circ_big = (x-xcent)**2 + (y-ycent)**2 <= r*r + 100
+    plot_circ_small = (x-xcent)**2 + (y-ycent)**2 >= r*r - 100
+    plot_circ = np.where(plot_circ_big == plot_circ_small)
     mean = np.mean(N[circ])
     std = np.std(N[circ])
     median = np.median(N[circ])
 
     # Image in magnitudes
-    img_mag = m0 - 2.5*np.log(N/wmean)
+    img_mag = m0 - 2.5*np.log10(N/wmean)
     # Plot image
     if plot:
         plt.clf()
         plt.ion()
-        plt.figure(1)
-        plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
+        plt.figure()
         plt.title("Sky brightness")
+        if plotCirc:
+            img_mag[plot_circ]=0
+            plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
+        else:
+            plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
         #plt.scatter(xd/2,yd/2,s=30)
         #plt.scatter(xcent,ycent,s=30)
         #plt.plot([xd/2,xcent],[yd/2,ycent],linewidth=1)
@@ -74,7 +83,16 @@ def makeGaussian(m0,plot=True, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vm
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(cax=cax)
         plt.show()
-    return mean, std, median
+
+    if hist:
+        plt.clf()
+        plt.ion()
+        plt.figure()
+        plt.hist(N[circ],bins=1000)
+        plt.xlim(2000,5000)
+        plt.ylim(0,2000)
+        plt.show()
+    return mean, std, median, N[circ]
 """
 m-m0 = -2.5log(F/F0)
 m0 = 20.78
