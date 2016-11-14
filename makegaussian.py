@@ -11,7 +11,7 @@ import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.6, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -48,10 +48,10 @@ def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.6
 
     #George's Circle!
     ycirc, xcirc = np.ogrid[:yd, :xd]
-    xcent = 750
-    ycent = 900-65
-    #Sulfur Mt. Centers x:750 y:900-65
-    #x:1100, y:500 for Thach Obs
+    xcent = 710
+    ycent = 885
+    #Sulfur Mt. Centers x:710 y:885
+    #x:1115, y:500 for Thach Obs
     r = 50
     circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
     plot_circ_big = (x-xcent)**2 + (y-ycent)**2 <= r*r + 100
