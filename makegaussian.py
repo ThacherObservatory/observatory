@@ -7,11 +7,12 @@ Created on Wed Oct  5 20:57:09 2016
 
 """
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -48,8 +49,7 @@ def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.6
 
     #George's Circle!
     ycirc, xcirc = np.ogrid[:yd, :xd]
-    xcent = 710
-    ycent = 885
+
     #Sulfur Mt. Centers x:710 y:885
     #x:1115, y:500 for Thach Obs
     r = 50
@@ -64,6 +64,7 @@ def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.6
     # Image in magnitudes
     img_mag = m0 - 2.5*np.log10(N/wmean)
     # Plot image
+    
     if plot:
         plt.clf()
         plt.ion()
@@ -88,11 +89,15 @@ def makeGaussian(m0,plot=True, hist=False, plotCirc=False, fwhm=20.,arcppx=383.6
         plt.clf()
         plt.ion()
         plt.figure()
-        plt.hist(N[circ],bins=1000)
+        n, bins, patches = plt.hist(N[circ],bins = 100,histtype='bar')
+        y = mlab.normpdf(bins,mean,std)
+        plt.plot(bins, y, 'r--')
         plt.xlim(2000,5000)
         plt.ylim(0,2000)
         plt.show()
+        return 
     return mean, std, median, N[circ]
+    
 """
 m-m0 = -2.5log(F/F0)
 m0 = 20.78
@@ -100,3 +105,18 @@ F0 = wmean
 
 img_magnitude = m0-2.5log10(img/wmean)
 """
+TOhist = makeGaussian(20.74,1115,500,plot=False,dir="/Users/sara/python/25Oct2016/IMG00069.FIT")[3]
+SMhist = makeGaussian(20.64,710,885,plot=False,dir="/Users/sara/python/25Oct2016/IMG00074.FIT")[3]
+dif = SMhist-TOhist
+plt.ion()
+plt.clf()
+plt.figure(1)
+data = np.vstack([TOhist,SMhist,dif]).T
+plt.xlim(-1000,5000)
+plt.ylim(0,2000)
+plt.hist(data, bins=1000,label=['TO','SM','dif'])
+plt.legend(loc='upper right')
+plt.show()
+v = np.where(dif<=0)
+pcent = len(v)/dif
+print dif, pcent
