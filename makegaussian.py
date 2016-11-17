@@ -11,6 +11,10 @@ import matplotlib.mlab as mlab
 import numpy as np
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy import stats
+import robust as rb
+import plotly.plotly as py
+import plotly.graph_objs as go
 
 def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
     """
@@ -105,18 +109,28 @@ F0 = wmean
 
 img_magnitude = m0-2.5log10(img/wmean)
 """
-TOhist = makeGaussian(20.74,1115,500,plot=False,dir="/Users/sara/python/25Oct2016/IMG00069.FIT")[3]
-SMhist = makeGaussian(20.64,710,885,plot=False,dir="/Users/sara/python/25Oct2016/IMG00074.FIT")[3]
-dif = SMhist-TOhist
+TO = makeGaussian(20.74,1115,500,plot=False,dir="/Users/sara/python/25Oct2016/IMG00069.FIT")[3]
+SM = makeGaussian(20.64,710,885,plot=False,dir="/Users/sara/python/25Oct2016/IMG00074.FIT")[3]
+dif = SM-TO
 plt.ion()
 plt.clf()
 plt.figure(1)
-data = np.vstack([TOhist,SMhist,dif]).T
-plt.xlim(-1000,5000)
+#data = np.vstack([TO,SM]).T
+plt.xlim(2000,4000)
 plt.ylim(0,2000)
-plt.hist(data, bins=1000,label=['TO','SM','dif'])
+plt.hist(data, bins=1000,label=['Thacher Observatory','Sulfur Mountain'],alpha=0.5)
+#plt.hist(TO, bins=1000,label='Thacher Observatory',alpha=0.5,color='r')
+#plt.hist(SM, bins=1000,label='Sulfur Mountain',alpha=0.5,color='b')
+plt.axvline(x=rb.mean(TO), color ='red', linewidth = 2)
+plt.axvline(x=rb.mean(SM), color = 'red', linewidth = 2)
+plt.title("Sky brightness")
+plt.xlabel("Flux Value")
+plt.ylabel("Count")
 plt.legend(loc='upper right')
 plt.show()
-v = np.where(dif<=0)
-pcent = len(v)/dif
-print dif, pcent
+inds, = np.where(dif<=0)
+pcent = len(inds,)
+ttest=stats.ttest_ind(TO, SM)
+#returns: T-statistic((estimated-hypothesis value)/standard error), 
+#p value(probability of an observed result assuming the null hypothesis is true)
+print dif, pcent, ttest
