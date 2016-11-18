@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import stats
 import robust as rb
 
-def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/sara/python/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -88,16 +88,7 @@ def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,a
         plt.show()
 
     if hist:
-        plt.clf()
-        plt.ion()
-        plt.figure()
-        n, bins, patches = plt.hist(N[circ],bins = 100,histtype='bar')
-        y = mlab.normpdf(bins,mean,std)
-        plt.plot(bins, y, 'r--')
-        plt.xlim(2000,5000)
-        plt.ylim(0,2000)
-        plt.show()
-        return
+        plotHist()
     return mean, std, median, N[circ], wmean
 
 """
@@ -107,33 +98,34 @@ F0 = wmean
 
 img_magnitude = m0-2.5log10(img/wmean)
 """
-TO, wmeanto= makeGaussian(20.74,1115,500,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00069.FIT")[3:]
-SM, wmeansm= makeGaussian(20.64,710,885,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT")[3:]
-dif = np.median(20.74-2.5*np.log10(TO/wmeanto))-np.median(20.64-2.5*np.log10(SM/wmeansm))
-pval= stats.ttest_ind(SM, TO)[1]
-plt.ion()
-plt.clf()
-plt.figure(1)
-data = np.vstack([TO,SM]).T
-plt.xlim(2000,4000)
-plt.ylim(0,2000)
-#plt.hist(TO, bins=1000,label='Thacher Observatory',alpha=0.5,color='r')
-#plt.hist(SM, bins=1000,label='Sulfur Mountain',alpha=0.5,color='b')
-plt.axvline(x=rb.mean(TO), color ='red', linewidth = 2)
-plt.axvline(x=rb.mean(SM), color = 'red', linewidth = 2)
-plt.annotate(r'$dif$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93], horizontalalignment='left', xycoords='axes fraction', fontsize='large', backgroundcolor='white')
-plt.annotate(r'$\bar{{\sigma}_T}_O$=%.2f flux/px' %rb.mean(TO), [.01,0.86], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='midnightblue')
-plt.annotate(r'$\bar{{\sigma}_S}_M$=%.2f flux/px'%rb.mean(SM), [0.01,0.79], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='darkgreen')
-plt.annotate(r'$p-val$=%.2E' %pval, [.01,.72], horizontalalignment='left', xycoords='axes fraction', fontsize='large')
-plt.hist(data, bins=1000,label=['Thacher Observatory (TO)','Sulfur Mountain (SM)'],alpha=0.5, width=40)
-plt.title("Sky brightness")
-plt.xlabel("Flux Value")
-plt.ylabel("Frequency")
-plt.legend(loc='upper right')
-plt.show()
-inds, = np.where(dif<=0)
-pcent = len(inds,)
-ttest=stats.ttest_ind(TO, SM)
-#returns: T-statistic((estimated-hypothesis value)/standard error),
-#p value(probability of an observed result assuming the null hypothesis is true)
-print dif, pcent, ttest
+def plotHist():
+    TO, wmeanto= makeGaussian(20.74,1115,500,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00069.FIT")[3:]
+    SM, wmeansm= makeGaussian(20.64,710,885,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT")[3:]
+    dif = np.median(20.74-2.5*np.log10(TO/wmeanto))-np.median(20.64-2.5*np.log10(SM/wmeansm))
+    pval= stats.ttest_ind(SM, TO)[1]
+    plt.ion()
+    plt.clf()
+    plt.figure(1)
+    data = np.vstack([TO,SM]).T
+    plt.xlim(2000,4000)
+    plt.ylim(0,2000)
+    #plt.hist(TO, bins=1000,label='Thacher Observatory',alpha=0.5,color='r')
+    #plt.hist(SM, bins=1000,label='Sulfur Mountain',alpha=0.5,color='b')
+    plt.axvline(x=rb.mean(TO), color ='red', linewidth = 2)
+    plt.axvline(x=rb.mean(SM), color = 'red', linewidth = 2)
+    plt.annotate(r'$dif$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93], horizontalalignment='left', xycoords='axes fraction', fontsize='large', backgroundcolor='white')
+    plt.annotate(r'$\bar{{\sigma}_T}_O$=%.2f flux/px' %rb.mean(TO), [.01,0.86], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='midnightblue')
+    plt.annotate(r'$\bar{{\sigma}_S}_M$=%.2f flux/px'%rb.mean(SM), [0.01,0.79], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='darkgreen')
+    plt.annotate(r'$p-val$=%.2E' %pval, [.01,.72], horizontalalignment='left', xycoords='axes fraction', fontsize='large')
+    plt.hist(data, bins=1000,label=['Thacher Observatory (TO)','Sulphur Mountain (SM)'],alpha=0.5, width=40)
+    plt.title("Sky brightness")
+    plt.xlabel("Flux Value")
+    plt.ylabel("Frequency")
+    plt.legend(loc='upper right')
+    plt.show()
+    inds, = np.where(dif<=0)
+    pcent = len(inds,)
+    ttest=stats.ttest_ind(TO, SM)
+    #returns: T-statistic((estimated-hypothesis value)/standard error),
+    #p value(probability of an observed result assuming the null hypothesis is true)
+    print dif, pcent, ttest
