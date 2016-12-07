@@ -10,13 +10,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import pdb
+import matplotlib as mpl
+
 
 user = 'nick' #'nick' and 'katie' are also defined users
 
 """
 SNR EQUATION
 """
+def plot_params(fontsize=16,linewidth=1.5):
+    """
+    Procedure to set the parameters for this suite of plotting utilities
+    """
 
+    global fs,lw
+
+    mpl.rcParams['axes.linewidth'] = 1.5
+    mpl.rcParams['xtick.major.size'] = 5
+    mpl.rcParams['xtick.major.width'] = 1.5
+    mpl.rcParams['ytick.major.size'] = 5
+    mpl.rcParams['ytick.major.width'] = 1.5
+    mpl.rcParams['xtick.labelsize'] = 14
+    mpl.rcParams['ytick.labelsize'] = 14
+    fs = fontsize
+    lw = linewidth
+
+    return
+
+plot_params()
 def plate_scale(mu=13.5,f=6.486,d=0.7):
     """
     Returns arcseconds per pixel for camera and telescope
