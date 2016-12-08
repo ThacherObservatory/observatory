@@ -29,6 +29,8 @@ plt.figure()
 plt.plot(secz,tau,'o')
 plt.ylabel('tau')
 plt.xlabel('secz')
+plt.xlim(1.85,1.95)
+plt.ylim(0.64,0.67)
 
 
 
