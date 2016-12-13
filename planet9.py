@@ -38,6 +38,7 @@ def plot_params(fontsize=16,linewidth=1.5):
     return
 
 plot_params()
+
 def plate_scale(mu=13.5,f=6.486,d=0.7):
     """
     Returns arcseconds per pixel for camera and telescope
@@ -116,21 +117,28 @@ def Mlim(time,seeing):
     mlim = mzp - 2.5*np.log10((SNR/g)*np.sqrt(numpix*Fb/time))
     return mlim
 
-def contourTime(s=[5.0,10.0],m=[22.5,24.0]):
+def calcSNR(time,mlim):
+    time = np.array(time)
+    mlim = np.array(mlim)
+    snr = np.sqrt(time/(numpix*Fb))*g*(10.0**(-.4*(mlim-mzp)))
+    return snr
+
+def contourTime(s=[5.0,40.0],m=[18,24.0]):
     s = np.linspace(s[0],s[1],1000)
     m = np.linspace(m[0],m[1],1000)
     snr, mlim = np.meshgrid(s,m)
     time = integrationTime(snr,mlim)
     timeMins = time/60
     plt.ion()
-    plt.figure()
+    plt.figure("time")
     plt.clf()
-    plot = plt.contour(snr,mlim,timeMins,50,cmap='inferno')
-    plt.clabel(plot, inline=True, fontsize=10)
-    plt.colorbar(plot,label='Time (mins)')
-    plt.xlabel('SNR')
-    plt.ylabel('Mlim')
-    plt.title('Integration time as a\nfunction of SNR and Mlim')
+    levels = np.array([1,5,10,15,30,60,90,120])
+    plot = plt.contour(snr,mlim,timeMins,levels,linewidth=2,colors='k')
+    plt.clabel(plot,fontsize=13,fmt='%1.0f',inline=True)
+    #plt.colorbar(plot,label='Time (mins)')
+    plt.xlabel('SNR',fontsize=17)
+    plt.ylabel(r'$m_{\rm{lim}}$',fontsize=17)
+    #plt.title('Integration time as a\nfunction of SNR and Mlim in V band',font)
 
 def contourMlim(s=[.5,5.0],t=[5.0,60.0]):
     s = np.linspace(s[0],s[1],100)
