@@ -11,8 +11,8 @@ data files every 5 days to save space.
 
 import os,shutil,glob,time,datetime
 
-outpath  = os.path.normpath('C:/Users/observatory/Dropbox (Thacher)/Observatory/CloudSensor/Data')
-srcpath = os.path.normpath('C:/Users/observatory/Documents/ClarityII')
+outpath  = os.path.normpath('C:/Users/Weather/Dropbox (Thacher)/Observatory/CloudSensor/Data')
+srcpath = os.path.normpath('C:/Users/Weather/Documents/ClarityII')
 
 print 'Starting infinite loop to check for Cloud Sensor files...'
 print ' '
