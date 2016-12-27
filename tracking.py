@@ -8,30 +8,29 @@ import datetime
 import jdutil
 from astropysics.coords import AngularCoordinate as angcor
 
-#path = '/Users/jonswift/Astronomy/ThacherObservatory/data/21Nov2016/'
+path = '/Users/jonswift/Astronomy/ThacherObservatory/data/22Dec2016/'
 
 
-path = '/Users/ONeill/astronomy/Data/04Dec2016/'
+#path = '/Users/ONeill/astronomy/Data/04Dec2016/'
 
-files,fct = tp.get_files(dir=path, prefix='SA_41-190',suffix='.fits')
+files,fct = tp.get_files(dir=path, prefix='WASP-50b',suffix='solved.fits')
+bfiles,bct = tp.get_files(dir=path,prefix='WASP-50b',suffix='bias.fit')
+master_bias = tp.master_bias(bfiles)
 
-ra = angcor('21 54 18.195').d
-dec = angcor('+45 15 22.57').d
-    
-data = tp.batch_total_flux(files,ra=ra, dec=dec,object=None,mag=10.367,SpT='f0v',
-                           brightest=False,camera='U16m',filter='Lum',network='katie')
+data = tp.batch_total_flux(files,object='WASP-50b',mag=11.6,SpT='g8v',bias=master_bias,
+                           nearest=True,camera='iKON-L',filter='V',gain=3.0,network='swift')
 
-tau = data['tau']
-secz = data['secz']
-plt.clf()
-plt.ion()
-plt.figure()
-plt.plot(secz,tau,'o')
-plt.ylabel('tau')
-plt.xlabel('secz')
-plt.xlim(1.85,1.95)
-plt.ylim(0.64,0.67)
 
+#tau = data['tau']
+#secz = data['secz']
+#plt.clf()
+#plt.ion()
+#plt.figure()
+#plt.plot(secz,tau,'o')
+#plt.ylabel('tau')
+#plt.xlabel('secz')
+#plt.xlim(1.85,1.95)
+#plt.ylim(0.64,0.67)
 
 
 # make datetime vector from JD
@@ -48,10 +47,9 @@ mx = np.median(xpos)
 my = np.median(ypos)
 
 plt.ion()
-plt.figure(1,figsize=(8.5,11))
+fig = plt.figure(1,figsize=(8.5,11))
 gs = gridspec.GridSpec(5, 1,wspace=0)
 
-fig,ax = plt.subplots()
 ax1 = plt.subplot(gs[0, 0])    
 ax1.plot(dates,xpos-mx,'o')
 ax1.set_xticklabels(())
@@ -93,7 +91,10 @@ ax5.set_ylabel(r'$\chi^2_r$')
 ax5.set_xlim(np.min(dates),np.max(dates))
 plt.gcf().autofmt_xdate()
 ax5.xaxis.set_minor_locator(HourLocator(np.arange(0, 25, 6)))
-ax5.xaxis.set_major_formatter(DateFormatter('%H-%M-%S'))
+#ax5.xaxis.set_minor_locator(HourLocator())
+ax5.xaxis.set_major_formatter(DateFormatter('%H:%M:%S'))
 ax5.fmt_xdata = DateFormatter('%H:%M:%S')
 fig.autofmt_xdate()
-plt.xlabel('Time (UT)')
+plt.xlabel('Universal Time (23 December 2016)')
+
+plt.savefig('22Dec2016_tracking.png',dpi=300)
