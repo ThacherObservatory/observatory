@@ -130,14 +130,15 @@ def contourTime(s=[5.0,40.0],m=[18,24.0]):
     time = integrationTime(snr,mlim)
     timeMins = time/60
     plt.ion()
-    plt.figure("time")
+    plt.figure()
     plt.clf()
     levels = np.array([1,5,10,15,30,60,90,120])
     plot = plt.contour(snr,mlim,timeMins,levels,linewidth=2,colors='k')
-    plt.clabel(plot,fontsize=13,fmt='%1.0f',inline=True)
+    plt.clabel(plot,fontsize=14,fmt='%1.0f',inline=True)
     #plt.colorbar(plot,label='Time (mins)')
-    plt.xlabel('SNR',fontsize=17)
-    plt.ylabel(r'$m_{\rm{lim}}$',fontsize=17)
+    plt.xlabel('SNR',fontsize=18)
+    plt.ylabel(r'$m_{\rm{lim}}$',fontsize=21)
+    plt.savefig("SNR_Mlim.png",dpi=300)
     #plt.title('Integration time as a\nfunction of SNR and Mlim in V band',font)
 
 def contourMlim(s=[.5,5.0],t=[5.0,60.0]):
