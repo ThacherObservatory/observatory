@@ -98,34 +98,87 @@ F0 = wmean
 
 img_magnitude = m0-2.5log10(img/wmean)
 """
-def plotHist():
-    TO, wmeanto= makeGaussian(20.74,1115,500,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00069.FIT")[3:]
-    SM, wmeansm= makeGaussian(20.64,710,885,plot=False,dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT")[3:]
-    dif = np.median(20.74-2.5*np.log10(TO/wmeanto))-np.median(20.64-2.5*np.log10(SM/wmeansm))
-    pval= stats.ttest_ind(SM, TO)[1]
+def plotHist(file1, m01, file2, m02, xcent1=1024, ycent1=1024, xcent2=1024,
+             ycent2=1024, dir="/Users/georgelawrence/python/Astronomy/data/",
+             ttest=False, **kwargs):
+    """
+    Compares brightness of two sky brightness images
+
+    Parameters:
+    -----------
+    file1: string
+        name of the first .FITS file
+    m01: double
+        photometer reading for first file
+    file2: string
+        name of the second .FITS file
+    m01: double
+        photometer reading for second file
+    xcent1,2; ycent1,2: int
+        x, y center coordinates for gaussian magnitude reading for
+        first and second image respectively
+    dir: string
+        directory which contains the images
+    ttest: boolean
+        if ttest, label the ttest value on the plot
+    kwargs:
+        bins: anything to pass to bins in plt.hist
+        label1: what you want file1 to be labeled as
+        label2: what you want file2 to be labeled as
+
+
+    Returns:
+    -----------
+    tuple: difference in images (mags/arcsec^2), students ttest statistc
+    """
+    # Run makeGaussian over the input images
+    img1,wmn1= makeGaussian(m01, xcent1, ycent1, plot=False, dir=dir+file1)[3:]
+    img2,wmn2= makeGaussian(m02, xcent2, ycent2, plot=False, dir=dir+file2)[3:]
+
+    # Get the photometer magnitude reading for each image, find difference
+    mag1 = m01-2.5*np.log10(img1/wmn1)
+    mag2 = m02-2.5*np.log10(img2/wmn2)
+    dif = np.median(mag1-mag2)
+    # Calculate student's t-test statistic for two distributions
+    pval= stats.ttest_ind(img2, img1)[1]
+
+    # Plot the results
+    plt.figure(1)
     plt.ion()
     plt.clf()
-    plt.figure(1)
-    data = np.vstack([TO,SM]).T
-    plt.xlim(2000,4000)
-    plt.ylim(0,2000)
-    #plt.hist(TO, bins=1000,label='Thacher Observatory',alpha=0.5,color='r')
-    #plt.hist(SM, bins=1000,label='Sulfur Mountain',alpha=0.5,color='b')
-    plt.axvline(x=rb.mean(TO), color ='red', linewidth = 2)
-    plt.axvline(x=rb.mean(SM), color = 'red', linewidth = 2)
-    plt.annotate(r'$dif$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93], horizontalalignment='left', xycoords='axes fraction', fontsize='large', backgroundcolor='white')
-    plt.annotate(r'$\bar{{\sigma}_T}_O$=%.2f flux/px' %rb.mean(TO), [.01,0.86], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='midnightblue')
-    plt.annotate(r'$\bar{{\sigma}_S}_M$=%.2f flux/px'%rb.mean(SM), [0.01,0.79], horizontalalignment='left', xycoords='axes fraction', fontsize="large", color='darkgreen')
-    plt.annotate(r'$p-val$=%.2E' %pval, [.01,.72], horizontalalignment='left', xycoords='axes fraction', fontsize='large')
-    plt.hist(data, bins=1000,label=['Thacher Observatory (TO)','Sulphur Mountain (SM)'],alpha=0.5, width=40)
+
+        # Plot histograms of data
+    plt.hist(img1, label=kwargs.get("label1", "Image 1"), alpha=.5, bins=
+             kwargs.get("bins", 10), color="midnightblue")
+    plt.hist(img2, label=kwargs.get("label2", "Image 2"), alpha=.5, bins=
+             kwargs.get("bins", 10), color="darkgreen")
+
+        # Plot means of distributions
+    plt.axvline(x=rb.mean(img1), color ='red', linewidth = 2)
+    plt.axvline(x=rb.mean(img2), color = 'red', linewidth = 2)
+        # Annotate the graph:
+        # difference
+    plt.annotate(r'$dif$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93],
+                 horizontalalignment='left', xycoords='axes fraction',
+                 fontsize='large', backgroundcolor='white')
+        # Means
+    plt.annotate(r'$\bar{\sigma}$=%.2f flux/px' %rb.mean(img1),
+                 [.01,0.86], horizontalalignment='left', xycoords=
+                 'axes fraction', fontsize="large", color='midnightblue',
+                 backgroundcolor="white")
+    plt.annotate(r'$\bar{\sigma}$=%.2f flux/px'%rb.mean(img2), [0.01,0.79],
+                 horizontalalignment='left', xycoords='axes fraction',
+                 fontsize="large", color='darkgreen', backgroundcolor="white")
+    if ttest:
+            # Student's T-Test statistic
+        plt.annotate(r'$T-Test pval$=%.2E' %pval, [.01,.72],
+                     horizontalalignment='left', xycoords='axes fraction',
+                     fontsize='large')
+
     plt.title("Sky brightness")
     plt.xlabel("Flux Value")
     plt.ylabel("Frequency")
     plt.legend(loc='upper right')
     plt.show()
-    inds, = np.where(dif<=0)
-    pcent = len(inds,)
-    ttest=stats.ttest_ind(TO, SM)
-    #returns: T-statistic((estimated-hypothesis value)/standard error),
-    #p value(probability of an observed result assuming the null hypothesis is true)
-    print dif, pcent, ttest
+
+    print dif, pval
