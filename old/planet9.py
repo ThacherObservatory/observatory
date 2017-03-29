@@ -7,15 +7,37 @@
 #                  npix, and get_path
 #                - Should probably program more of what is in my notebook
 import numpy as np
-import SNR
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+import pdb
+import matplotlib as mpl
+
 
 user = 'nick' #'nick' and 'katie' are also defined users
 
 """
 SNR EQUATION
 """
+def plot_params(fontsize=16,linewidth=1.5):
+    """
+    Procedure to set the parameters for this suite of plotting utilities
+    """
+
+    global fs,lw
+
+    mpl.rcParams['axes.linewidth'] = 1.5
+    mpl.rcParams['xtick.major.size'] = 5
+    mpl.rcParams['xtick.major.width'] = 1.5
+    mpl.rcParams['ytick.major.size'] = 5
+    mpl.rcParams['ytick.major.width'] = 1.5
+    mpl.rcParams['xtick.labelsize'] = 14
+    mpl.rcParams['ytick.labelsize'] = 14
+    fs = fontsize
+    lw = linewidth
+
+    return
+
+plot_params()
 
 def plate_scale(mu=13.5,f=6.486,d=0.7):
     """
@@ -44,7 +66,7 @@ def npix(fwhm=3.0,ps=ps):
     numpix = np.pi/4.0 * (fwhm/ps)**2
     return numpix
 
-numpix = npix(fwhm=3.0)
+numpix = npix(fwhm=3.5)
 
 
 # number of electrons per sec due to background
@@ -58,6 +80,8 @@ g = 1.9
 # zero point magnitude
 mzp = 22.5
 
+# signal to noise
+SNR = 5
 # everyone write their own directory in a comment
 # and just uncomment it when you use the code
 
@@ -76,10 +100,30 @@ dir = get_path(user=user)
 def integrationTime(snr,mlim):
     snr = np.array(snr)
     mlim = np.array(mlim)
-    t = npix*Fb/np.power((g/snr)*np.power(10.0,-.4*(mlim-mzp)),2)
+    t = (numpix*Fb)/(((g/snr)*(10.0**(-.4*(mlim-mzp))))**2)
     return t
 
-def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
+def Mlim(time,seeing):
+    #to put time into seconds for equation
+    time = np.array(time)*60
+    seeing = np.array(seeing).flatten()
+    numpix = np.array([])
+    for i in range(len(seeing)):
+        numpix = np.array(np.append(numpix,npix(fwhm=seeing[i])))
+        print i
+    numpix = np.reshape(numpix,(100,100))
+    seeing = np.reshape(seeing,(100,100))
+    #pdb.set_trace()
+    mlim = mzp - 2.5*np.log10((SNR/g)*np.sqrt(numpix*Fb/time))
+    return mlim
+
+def calcSNR(time,mlim):
+    time = np.array(time)
+    mlim = np.array(mlim)
+    snr = np.sqrt(time/(numpix*Fb))*g*(10.0**(-.4*(mlim-mzp)))
+    return snr
+
+def contourTime(s=[5.0,40.0],m=[18,24.0]):
     s = np.linspace(s[0],s[1],1000)
     m = np.linspace(m[0],m[1],1000)
     snr, mlim = np.meshgrid(s,m)
@@ -88,12 +132,29 @@ def contourTime(s=[5.0,10.0],m=[22.5,25.0]):
     plt.ion()
     plt.figure()
     plt.clf()
-    plot = plt.contour(snr,mlim,timeMins,200,cmap='inferno')
+    levels = np.array([1,5,10,15,30,60,90,120])
+    plot = plt.contour(snr,mlim,timeMins,levels,linewidth=2,colors='k')
+    plt.clabel(plot,fontsize=14,fmt='%1.0f',inline=True)
+    #plt.colorbar(plot,label='Time (mins)')
+    plt.xlabel('SNR',fontsize=18)
+    plt.ylabel(r'$m_{\rm{lim}}$',fontsize=21)
+    plt.savefig("SNR_Mlim.png",dpi=300)
+    #plt.title('Integration time as a\nfunction of SNR and Mlim in V band',font)
+
+def contourMlim(s=[.5,5.0],t=[5.0,60.0]):
+    s = np.linspace(s[0],s[1],100)
+    t = np.linspace(t[0],t[1],100)
+    fwhm, time = np.meshgrid(s,t)
+    mlim = Mlim(time,fwhm)
+    plt.ion()
+    plt.figure()
+    plt.clf()
+    plot = plt.contour(time,fwhm,mlim,25,cmap='inferno')
     plt.clabel(plot, inline=True, fontsize=10)
-    plt.colorbar(plot,label='Time (mins)')
-    plt.xlabel('SNR')
-    plt.ylabel('Mlim')
-    plt.title('Integration time as a\nfunction of SNR and Mlim')
+    plt.colorbar(plot,label='Mlim')
+    plt.xlabel('Time (mins)')
+    plt.ylabel('FWHM')
+    plt.title('Limiting magnitude as a\nfunction of FWHM and time')
 
 """
 SKY AREA
