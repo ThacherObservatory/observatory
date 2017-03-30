@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import stats
 import robust as rb
 
-def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -55,6 +55,7 @@ def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,a
     #Sulfur Mt. Centers x:710 y:885
     #x:1115, y:500 for Thach Obs
     r = 50
+    print len(N), len(N[0])
     circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
     plot_circ_big = (x-xcent)**2 + (y-ycent)**2 <= r*r + 100
     plot_circ_small = (x-xcent)**2 + (y-ycent)**2 >= r*r - 100
@@ -71,7 +72,7 @@ def makeGaussian(m0,xcent,ycent,plot=True,hist=False, plotCirc=False, fwhm=20.,a
         plt.clf()
         plt.ion()
         plt.figure()
-        plt.title("Sky brightness")
+        plt.title("Sky brightness for October 25th, 2016")
         if plotCirc:
             img_mag[plot_circ]=0
             plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
@@ -98,8 +99,8 @@ F0 = wmean
 
 img_magnitude = m0-2.5log10(img/wmean)
 """
-def plotHist(file1, m01, file2, m02, xcent1=1024, ycent1=1024, xcent2=1024,
-             ycent2=1024, dir="/Users/georgelawrence/python/Astronomy/data/",
+def plotHist(file1, m01, file2, m02, xcent1=696, ycent1=520, xcent2=696,
+             ycent2=520, dir="/Users/georgelawrence/python/Astronomy/data/",
              ttest=False, **kwargs):
     """
     Compares brightness of two sky brightness images
@@ -148,10 +149,10 @@ def plotHist(file1, m01, file2, m02, xcent1=1024, ycent1=1024, xcent2=1024,
     plt.clf()
 
         # Plot histograms of data
-    plt.hist(img1, label=kwargs.get("label1", "Image 1"), alpha=.5, bins=
-             kwargs.get("bins", 10), color="midnightblue")
-    plt.hist(img2, label=kwargs.get("label2", "Image 2"), alpha=.5, bins=
-             kwargs.get("bins", 10), color="darkgreen")
+    plt.hist(img1, label=kwargs.get("label1", "Image 1"), alpha=.7,
+             bins= kwargs.get("bins", 30), color="darkorange")
+    plt.hist(img2, label=kwargs.get("label2", "Image 2"), alpha=.7,
+             bins= kwargs.get("bins", 30), color="darkgreen")
 
         # Plot means of distributions
     plt.axvline(x=rb.mean(img1), color ='red', linewidth = 2)
@@ -164,7 +165,7 @@ def plotHist(file1, m01, file2, m02, xcent1=1024, ycent1=1024, xcent2=1024,
         # Means
     plt.annotate(r'$\bar{\sigma}$=%.2f flux/px' %rb.mean(img1),
                  [.01,0.86], horizontalalignment='left', xycoords=
-                 'axes fraction', fontsize="large", color='midnightblue',
+                 'axes fraction', fontsize="large", color='darkorange',
                  backgroundcolor="white")
     plt.annotate(r'$\bar{\sigma}$=%.2f flux/px'%rb.mean(img2), [0.01,0.79],
                  horizontalalignment='left', xycoords='axes fraction',
