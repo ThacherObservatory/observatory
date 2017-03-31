@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import stats
 import robust as rb
 
-def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.2, vmax=21.0, dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT"):
+def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fwhm=20.,arcppx=383.65, center=None,vmin=19.6, vmax=21.0, dir="/Users/george/Dropbox/Astronomy/Oculus/25Oct2016/IMG00074.FIT"):
     """
     m0: reading from photometer
     fwhm: full width half max
@@ -55,7 +55,6 @@ def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fw
     #Sulfur Mt. Centers x:710 y:885
     #x:1115, y:500 for Thach Obs
     r = 50
-    print len(N), len(N[0])
     circ = (x-xcent)**2 + (y-ycent)**2 <= r*r
     plot_circ_big = (x-xcent)**2 + (y-ycent)**2 <= r*r + 100
     plot_circ_small = (x-xcent)**2 + (y-ycent)**2 >= r*r - 100
@@ -71,8 +70,8 @@ def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fw
     if plot:
         plt.clf()
         plt.ion()
-        plt.figure()
-        plt.title("Sky brightness for October 25th, 2016")
+        plt.figure(1)
+        #plt.title("Sky brightness for October 25th, 2016")
         if plotCirc:
             img_mag[plot_circ]=0
             plt.imshow(img_mag, vmin=vmin, vmax=vmax, cmap='CMRmap_r')
@@ -85,8 +84,8 @@ def makeGaussian(m0,xcent=696,ycent=520,plot=True,hist=False, plotCirc=False, fw
         ax = plt.gca()
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(cax=cax)
-        plt.show()
+        cbar = plt.colorbar(cax=cax).set_label("Relative Darkness")
+        plt.show(block=False)
 
     if hist:
         plotHist()
@@ -144,7 +143,7 @@ def plotHist(file1, m01, file2, m02, xcent1=696, ycent1=520, xcent2=696,
     pval= stats.ttest_ind(img2, img1)[1]
 
     # Plot the results
-    plt.figure(1)
+    plt.figure(99)
     plt.ion()
     plt.clf()
 
@@ -159,15 +158,15 @@ def plotHist(file1, m01, file2, m02, xcent1=696, ycent1=520, xcent2=696,
     plt.axvline(x=rb.mean(img2), color = 'red', linewidth = 2)
         # Annotate the graph:
         # difference
-    plt.annotate(r'$dif$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93],
+    plt.annotate(r'$\Delta F$=%.2f mags/arcsec'u'\u00B2' %dif, [.01,.93],
                  horizontalalignment='left', xycoords='axes fraction',
                  fontsize='large', backgroundcolor='white')
         # Means
-    plt.annotate(r'$\bar{\sigma}$=%.2f flux/px' %rb.mean(img1),
+    plt.annotate(r'$\bar F$=%.2f flux/px' %rb.mean(img1),
                  [.01,0.86], horizontalalignment='left', xycoords=
                  'axes fraction', fontsize="large", color='darkorange',
                  backgroundcolor="white")
-    plt.annotate(r'$\bar{\sigma}$=%.2f flux/px'%rb.mean(img2), [0.01,0.79],
+    plt.annotate(r'$\bar F$=%.2f flux/px'%rb.mean(img2), [0.01,0.79],
                  horizontalalignment='left', xycoords='axes fraction',
                  fontsize="large", color='darkgreen', backgroundcolor="white")
     if ttest:
@@ -176,10 +175,10 @@ def plotHist(file1, m01, file2, m02, xcent1=696, ycent1=520, xcent2=696,
                      horizontalalignment='left', xycoords='axes fraction',
                      fontsize='large')
 
-    plt.title("Sky brightness")
+    #plt.title("Sky brightness")
     plt.xlabel("Flux Value")
     plt.ylabel("Frequency")
     plt.legend(loc='upper right')
-    plt.show()
+    plt.show(block=False)
 
     print dif, pval
